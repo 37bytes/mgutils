@@ -20,7 +20,6 @@ public class MapBuilder<K, V> {
 
     /**
      * Creates an instance of {@link MapBuilder} using the {@link HashMap} implementation.
-     * @since 1.0
      */
     public MapBuilder() {
         this(HashMap::new);
@@ -30,7 +29,6 @@ public class MapBuilder<K, V> {
      * Creates an instance of {@link MapBuilder} using the provided {@code mapFactory} to create a {@link Map}.<br>
      * The {@link Map} created by {@code mapFactory} must support the {@link Map#put} operation.
      * @param mapFactory The object that creates a {@link Map} instance.
-     * @since 1.0
      */
     public MapBuilder(Supplier<Map<K, V>> mapFactory) {
         this.map = mapFactory.get();
@@ -40,7 +38,6 @@ public class MapBuilder<K, V> {
      * Inserts an entry into the created {@link Map}, using the provided {@code key} and {@code value}.
      * @param key The key associated with the value.
      * @param value The value.
-     * @since 1.0
      */
     public MapBuilder<K, V> put(@Nullable K key, @Nullable V value) {
         map.put(key, value);
@@ -50,7 +47,6 @@ public class MapBuilder<K, V> {
     /**
      * Inserts an entry into the created {@link Map}, using the provided {@code key} and {@code value}.
      * @param entry The entry added to the created {@link Map}.
-     * @since 1.0
      */
     public MapBuilder<K, V> put(@NotNull Map.Entry<K, V> entry) {
         return put(entry.getKey(), entry.getValue());
@@ -59,7 +55,6 @@ public class MapBuilder<K, V> {
     /**
      * Returns the created {@link Map} instance, the implementation depends on the {@code mapFactory}
      * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.
-     * @since 1.0
      */
     public Map<K, V> build() {
         return map;
@@ -67,7 +62,6 @@ public class MapBuilder<K, V> {
 
     /**
      * Creates an {@link Entry} instance.
-     * @since 1.0
      */
     public static <K, V> Map.Entry<K, V> entry(@Nullable K key, @Nullable V value) {
         return new Entry<>(key, value);
@@ -75,7 +69,6 @@ public class MapBuilder<K, V> {
 
     /**
      * Creates a {@link HashMap} instance, populating it with the provided {@code entries}.
-     * @since 1.0
      */
     @SafeVarargs
     public static <K, V> Map<K, V> fromEntries(@NotNull Map.Entry<K, V>... entries) {
@@ -84,7 +77,6 @@ public class MapBuilder<K, V> {
 
     /**
      * Creates a {@link Map} instance using the specified {@code mapFactory}, populating it with the provided {@code entries}.
-     * @since 1.0
      */
     @SafeVarargs
     public static <K, V> Map<K, V> fromEntries(Supplier<Map<K, V>> mapFactory, @NotNull Map.Entry<K, V>... entries) {
@@ -101,7 +93,6 @@ public class MapBuilder<K, V> {
 
     /**
      * {@link Map} entry used for creating {@link Map} using {@link MapBuilder}.
-     * @since 1.0
      */
     private static class Entry<K, V> implements Map.Entry<K, V> {
         private final K key;

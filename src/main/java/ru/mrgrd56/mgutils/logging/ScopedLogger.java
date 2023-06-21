@@ -88,6 +88,7 @@ import java.util.stream.Stream;
  * [6b635a25b53cb0ba] fetchPost: [21] fetchComment: populated comment
  * [6b635a25b53cb0ba] fetchPost: successfully fetched the post
  * </pre>
+ * @since 1.0
  */
 public class ScopedLogger extends PrefixedLogger {
     private static final Random random = new Random();
@@ -153,6 +154,16 @@ public class ScopedLogger extends PrefixedLogger {
      * @return The unique scope ID.
      */
     public static Object createScopeId() {
+        long value = random.nextLong() & Long.MAX_VALUE;
+        return String.format("%016x", value);
+    }
+
+    /**
+     * Generates a unique ID for a new scope using the passed {@link Random} instance.
+     *
+     * @return The unique scope ID.
+     */
+    public static Object createScopeId(Random random) {
         long value = random.nextLong() & Long.MAX_VALUE;
         return String.format("%016x", value);
     }
