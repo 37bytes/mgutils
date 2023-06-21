@@ -28,7 +28,6 @@ public class TaskInvoker<T> {
 
     /**
      * Accepts a task by adding it to the list for execution. The task <u>DOES NOT</u> start executing.
-     * @since 1.0
      */
     public void submit(Callable<T> task) {
         tasks.add(new InvokerCallable<>(task));
@@ -36,7 +35,6 @@ public class TaskInvoker<T> {
 
     /**
      * Accepts a task with no return value, adding it to the list for execution. The task <u>DOES NOT</u> start executing.
-     * @since 1.0
      */
     public void submit(Runnable task) {
         submit(() -> {
@@ -48,7 +46,6 @@ public class TaskInvoker<T> {
     /**
      * Accepts tasks by adding them to the list for execution. The tasks <u>DO NOT</u> start executing.
      * @see #submit(Callable)
-     * @since 1.0
      */
     public void submitAll(Collection<Callable<T>> tasks) {
         this.tasks.addAll(tasks.stream().map(InvokerCallable::new).collect(Collectors.toList()));
@@ -58,7 +55,6 @@ public class TaskInvoker<T> {
      * Accepts tasks with no return value, adding them to the list for execution. The tasks <u>DO NOT</u> start executing.
      * @see #submit(Runnable)
      * @see #submitAll(Collection)
-     * @since 1.0
      */
     public void submitAllVoid(Collection<Runnable> tasks) {
         List<Callable<T>> voidTasks = tasks.stream()
@@ -75,7 +71,6 @@ public class TaskInvoker<T> {
 
     /**
      * Executes all accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.
-     * @since 1.0
      */
     public List<Future<T>> invokeAll() {
         if (tasks.isEmpty()) {
@@ -95,7 +90,6 @@ public class TaskInvoker<T> {
      * Executes all still uncompleted tasks using {@link #invokeAll}, waits for their completion, and returns the results.<br>
      * The list of accepted tasks is cleared.
      * @throws CancellationException Might be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
-     * @since 1.0
      */
     public List<T> completeAll() throws CancellationException {
         if (tasks.isEmpty()) {
@@ -108,7 +102,6 @@ public class TaskInvoker<T> {
     /**
      * Cancels all the accepted tasks. If attempted to execute, these tasks will throw a {@link CancellationException}.<br>
      * Multiple calls to the method for the same tasks will not lead to anything.
-     * @since 1.0
      */
     public void cancelAll() {
         for (InvokerCallable<T> task : this.tasks) {

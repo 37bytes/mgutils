@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+/**
+ * @since 1.0
+ */
 public abstract class PrefixedLogger implements Logger {
     protected final Logger logger;
 
