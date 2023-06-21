@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 /**
  * Provides an interface for creating a mutable {@link Map}.<br>
- * In created {@link Map}s, both keys and values can be {@code null}, unlike {@link Map#of} and {@link Map#ofEntries}.<br>
+ * In created {@link Map}s, both keys and values can be {@code null}, unlike {@code Map#of} and {@code Map#ofEntries}.<br>
  * The created implementation of {@link Map} can be manually specified, by default the {@link HashMap} is used.
  * @param <K> The type of the key.
  * @param <V> The type of the value.
