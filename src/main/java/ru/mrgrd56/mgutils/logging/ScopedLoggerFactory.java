@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 
 import java.util.Objects;
 
+/**
+ * @since 1.0
+ */
 public class ScopedLoggerFactory {
     @NotNull
     private final Logger logger;
