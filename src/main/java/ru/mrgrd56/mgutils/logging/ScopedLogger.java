@@ -3,7 +3,6 @@ package ru.mrgrd56.mgutils.logging;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -80,13 +79,15 @@ import java.util.stream.Stream;
  * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: fetching commentId=63
  * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
  * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: populated comment
- * [6b635a25b53cb0ba] fetchPost: [632] fetchComment: fetching commentId=632
- * [6b635a25b53cb0ba] fetchPost: [632] fetchComment: got the response Response@321c18fb
- * [6b635a25b53cb0ba] fetchPost: [632] fetchComment: populated comment
- * [6b635a25b53cb0ba] fetchPost: [21] fetchComment: fetching commentId=21
- * [6b635a25b53cb0ba] fetchPost: [21] fetchComment: got the response Response@4d9ce242
- * [6b635a25b53cb0ba] fetchPost: [21] fetchComment: populated comment
  * [6b635a25b53cb0ba] fetchPost: successfully fetched the post
+ * </pre>
+ * Second calling {@code Example#fetchPost} will output logs with different random scopeId:
+ * <pre>
+ * [3fa8a6058b9103d0] fetchPost: fetching postId=2690201
+ * [3fa8a6058b9103d0] fetchPost: got the response Response@3769fecf
+ * ...
+ * [3fa8a6058b9103d0] fetchPost: [63] fetchComment: populated comment
+ * [3fa8a6058b9103d0] fetchPost: successfully fetched the post
  * </pre>
  * @since 1.0
  */
@@ -220,55 +221,5 @@ public class ScopedLogger extends PrefixedLogger {
         }
 
         return idTemplate + scopeName + " ";
-    }
-
-    static class Example {
-        public static void main(String[] args) {
-            new Example().fetchPost(8192557);
-        }
-
-        Logger log = LoggerFactory.getLogger(this.getClass());
-
-        public void fetchPost(int postId) {
-            Logger logger = ScopedLogger.of(log, "fetchPost:");
-
-            logger.trace("fetching postId={}", postId);
-
-//                Response response;
-//                try {
-//                    response = http.request("http://localhost:8080/posts/" + postId);
-            logger.trace("got the response {}", new Object());
-//                } catch (Exception e) {
-//                    logger.error("unable to fetch the person", e);
-//                    throw e;
-//                }
-
-//                Post post = response.getBody();
-            logger.trace("got the post {}", new Object());
-
-            for (int commentId : new int[] {52, 63, 632, 21}) {
-                Logger commentLogger = ScopedLogger.of(logger, "fetchComment:", commentId);
-
-                commentLogger.trace("fetching commentId={}", commentId);
-
-//                    Response commentResponse;
-
-//                    try {
-//                        commentResponse = http.request("http://localhost:8080/posts/" + postId);
-                commentLogger.trace("got the response {}", new Object());
-//                    } catch (Exception e) {
-//                        commentLogger.error("unable to fetch the comment", e);
-//                        throw e;
-//                    }
-
-//                    commentsHelper.populateComment(comment, commentResponse.getBody());
-
-                commentLogger.trace("populated comment");
-            }
-
-            logger.trace("successfully fetched the post");
-
-//                return post;
-        }
     }
 }
