@@ -3,9 +3,10 @@ package ru.mrgrd56.mgutils.logging;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import ru.mrgrd56.mgutils.random.RandomIdGenerator;
 
 import java.util.Arrays;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 /**
@@ -70,29 +71,29 @@ import java.util.stream.Stream;
  * </pre>
  * Calling {@code Example#fetchPost} will output:
  * <pre>
- * [6b635a25b53cb0ba] fetchPost: fetching postId=2690201
- * [6b635a25b53cb0ba] fetchPost: got the response Response@3769fecf
- * [6b635a25b53cb0ba] fetchPost: got the post Post@5d244b79
- * [6b635a25b53cb0ba] fetchPost: [52] fetchComment: fetching commentId=52
- * [6b635a25b53cb0ba] fetchPost: [52] fetchComment: got the response Response@14cb4e66
- * [6b635a25b53cb0ba] fetchPost: [52] fetchComment: populated comment
- * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: fetching commentId=63
- * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
- * [6b635a25b53cb0ba] fetchPost: [63] fetchComment: populated comment
- * [6b635a25b53cb0ba] fetchPost: successfully fetched the post
+ * [48y9zeqq2c2d] fetchPost: fetching postId=2690201
+ * [48y9zeqq2c2d] fetchPost: got the response Response@3769fecf
+ * [48y9zeqq2c2d] fetchPost: got the post Post@5d244b79
+ * [48y9zeqq2c2d] fetchPost: [52] fetchComment: fetching commentId=52
+ * [48y9zeqq2c2d] fetchPost: [52] fetchComment: got the response Response@14cb4e66
+ * [48y9zeqq2c2d] fetchPost: [52] fetchComment: populated comment
+ * [48y9zeqq2c2d] fetchPost: [63] fetchComment: fetching commentId=63
+ * [48y9zeqq2c2d] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
+ * [48y9zeqq2c2d] fetchPost: [63] fetchComment: populated comment
+ * [48y9zeqq2c2d] fetchPost: successfully fetched the post
  * </pre>
  * Second calling {@code Example#fetchPost} will output logs with different random scopeId:
  * <pre>
- * [3fa8a6058b9103d0] fetchPost: fetching postId=2690201
- * [3fa8a6058b9103d0] fetchPost: got the response Response@3769fecf
+ * [juo0n1nal8m5] fetchPost: fetching postId=2690201
+ * [juo0n1nal8m5] fetchPost: got the response Response@3769fecf
  * ...
- * [3fa8a6058b9103d0] fetchPost: [63] fetchComment: populated comment
- * [3fa8a6058b9103d0] fetchPost: successfully fetched the post
+ * [juo0n1nal8m5] fetchPost: [63] fetchComment: populated comment
+ * [juo0n1nal8m5] fetchPost: successfully fetched the post
  * </pre>
  * @since 1.0
  */
 public class ScopedLogger extends PrefixedLogger {
-    private static final Random random = new Random();
+    private static final RandomIdGenerator idGenerator = new RandomIdGenerator();
 
     private final String prefixTemplate;
     private final Object[] prefixArgs;
@@ -114,10 +115,10 @@ public class ScopedLogger extends PrefixedLogger {
     }
 
     /**
-     * Creates a new ScopedLogger with a generated unique scope ID.
+     * Creates a new {@link ScopedLogger} with a generated unique scope ID.
      *
-     * @param logger The Logger instance to be wrapped by ScopedLogger.
-     * @return The new ScopedLogger instance.
+     * @param logger The {@link Logger} instance to be wrapped by {@link ScopedLogger}.
+     * @return The new {@link ScopedLogger} instance.
      */
     @NotNull
     public static Logger of(@NotNull Logger logger) {
@@ -125,11 +126,11 @@ public class ScopedLogger extends PrefixedLogger {
     }
 
     /**
-     * Creates a new ScopedLogger with a given scope name and a generated unique scope ID.
+     * Creates a new {@link ScopedLogger} with a given scope name and a generated unique scope ID.
      *
-     * @param logger The Logger instance to be wrapped by ScopedLogger.
+     * @param logger The {@link Logger} instance to be wrapped by {@link ScopedLogger}.
      * @param scopeName The scope name, typically representing a method or block of code.
-     * @return The new ScopedLogger instance.
+     * @return The new {@link ScopedLogger} instance.
      */
     @NotNull
     public static Logger of(@NotNull Logger logger, CharSequence scopeName) {
@@ -137,12 +138,12 @@ public class ScopedLogger extends PrefixedLogger {
     }
 
     /**
-     * Creates a new ScopedLogger with a given scope name and scope ID.
+     * Creates a new {@link ScopedLogger} with a given scope name and scope ID.
      *
-     * @param logger The Logger instance to be wrapped by ScopedLogger.
+     * @param logger The {@link Logger} instance to be wrapped by {@link ScopedLogger}.
      * @param scopeName The scope name, typically representing a method or block of code.
      * @param scopeId The scope ID, typically used to identify the invocation of a block of code represented by scopeName.
-     * @return The new ScopedLogger instance.
+     * @return The new {@link ScopedLogger} instance.
      */
     @NotNull
     public static Logger of(@NotNull Logger logger, CharSequence scopeName, @Nullable Object scopeId) {
@@ -155,24 +156,23 @@ public class ScopedLogger extends PrefixedLogger {
      * @return The unique scope ID.
      */
     public static Object createScopeId() {
-        long value = random.nextLong() & Long.MAX_VALUE;
-        return String.format("%016x", value);
+        return createScopeId(ThreadLocalRandom.current());
     }
 
     /**
-     * Generates a unique ID for a new scope using the passed {@link Random} instance.
+     * Generates a unique ID for a new scope using the passed {@link ThreadLocalRandom} instance.
      *
      * @return The unique scope ID.
+     * @since 1.2.0 - signature changed
      */
-    public static Object createScopeId(Random random) {
-        long value = random.nextLong() & Long.MAX_VALUE;
-        return String.format("%016x", value);
+    public static Object createScopeId(ThreadLocalRandom random) {
+        return idGenerator.createIdentifier(random);
     }
 
     /**
-     * Checks whether the given Logger is a ScopedLogger.
+     * Checks whether the given {@link Logger} is a {@link ScopedLogger}.
      *
-     * @param logger The Logger instance to be checked.
+     * @param logger The {@link Logger} instance to be checked.
      * @return {@code true} if the Logger is a ScopedLogger, {@code false} otherwise.
      */
     public static boolean isScopedLogger(Logger logger) {
