@@ -26,4 +26,4 @@ The library requires Java 8 or above.
   <version>CURRENT_VERSION_HERE</version>
 </dependency>
 ```
-3. Paste this fragment into your dependency list. In case of Maven, it's the `<dependencies>` section in the `pom.xml` file.
+3. Paste this fragment into your dependency list. In case of Maven, it's the `<dependencies>` section in `pom.xml`.
