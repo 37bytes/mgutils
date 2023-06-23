@@ -168,3 +168,35 @@ for (int i = 0; i < 60; i++) {
 }
 List<String> results = invoker.completeAll();
 ```
+
+Also, tasks in `TaskInvoker` can be cancelled using the `cancelAll` method. Here's an example:
+
+```java
+ExecutorService executor = Executors.newFixedThreadPool(5);
+TaskInvoker<Void> invoker = new TaskInvoker<>(executor);
+
+List<String> results = Collections.synchronizedList(new ArrayList<>());
+
+for (int i = 0; i < 100; i++) {
+    int number = i;
+    invoker.submit(() -> {
+        // Here's your task returning some data
+        Thread.sleep(60);
+        if (results.size() >= 6) {
+            invoker.cancelAll();
+        }
+        results.add("Number " + number);
+    });
+}
+try {
+    invoker.completeAll();
+} catch (CancellationException e) {
+    // an exception will be thrown
+}
+
+// the results list contains less than 100 items
+```
+
+As soon as `completeAll()` is called, the remaining tasks are immediately marked as cancelled and an attempt to execute them by `TaskInvoker` will lead to `CancellationException`.
+
+Because `completeAll()` throws an exception when the tasks are cancelled, we have to collect the results manually, if needed. Note that it's also possible to pass a function without a returning value to `invoker.submit(...)`, that is not possible with `executor.invokeAll` (`Callable<Void>` still requires returning `null`).
