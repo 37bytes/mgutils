@@ -4,13 +4,18 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CachedInvokerTest {
     @Test
     public void testCachedInvoker() throws Exception {
-        CachedInvoker cachedInvoker = new CachedInvoker(Executors.newFixedThreadPool(5));
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+
+        CachedInvoker cachedInvoker = new CachedInvoker(executor);
 
         AtomicInteger timesExecuted = new AtomicInteger(0);
 
@@ -26,7 +31,10 @@ public class CachedInvokerTest {
             return fetchValue(timesExecuted); // executed
         });
 
-        for (int i = 0; i < 10_000; i++) {
+        AtomicReference<CompletableFuture<String>> mainFuture5 = new AtomicReference<>();
+        AtomicInteger task5CalledTimes = new AtomicInteger(0);
+
+        for (int i = 0; i < 100_000; i++) {
             cachedInvoker.invoke("TASK-1", () -> {
                 Assertions.fail("This is not supposed to be executed");
                 return fetchValue(timesExecuted);
@@ -37,12 +45,12 @@ public class CachedInvokerTest {
                 return fetchValue(timesExecuted);
             });
 
-            cachedInvoker.invokeOnceAsync("TASK-5", () -> {
-                Assertions.fail("This is not supposed to be executed");
+            mainFuture5.set(cachedInvoker.invokeOnceAsync("TASK-5", () -> {
                 Thread.sleep(500);
+                task5CalledTimes.getAndIncrement();
 
                 return "task five";
-            });
+            }));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -92,7 +100,10 @@ public class CachedInvokerTest {
             return fetchValue(timesExecuted); // executed
         });
 
-        Assertions.assertEquals(5, timesExecuted.get());
+        mainFuture5.get().join();
+
+        Assertions.assertSame(5, timesExecuted.get());
+        Assertions.assertSame(1, task5CalledTimes.get());
     }
 
     private double fetchValue(AtomicInteger timesExecuted) throws Exception {
