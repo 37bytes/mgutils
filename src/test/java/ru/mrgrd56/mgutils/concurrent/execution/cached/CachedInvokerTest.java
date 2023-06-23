@@ -26,6 +26,25 @@ public class CachedInvokerTest {
             return fetchValue(timesExecuted); // executed
         });
 
+        for (int i = 0; i < 10_000; i++) {
+            cachedInvoker.invoke("TASK-1", () -> {
+                Assertions.fail("This is not supposed to be executed");
+                return fetchValue(timesExecuted);
+            });
+
+            cachedInvoker.invoke("TASK-2", () -> {
+                Assertions.fail("This is not supposed to be executed");
+                return fetchValue(timesExecuted);
+            });
+
+            cachedInvoker.invokeOnceAsync("TASK-5", () -> {
+                Assertions.fail("This is not supposed to be executed");
+                Thread.sleep(500);
+
+                return "task five";
+            });
+        }
+
         for (int i = 0; i < 10; i++) {
             CachedInvocation<Double> invocation1 = cachedInvoker.invoke("TASK-1", () -> {
                 Assertions.fail("This is not supposed to be executed");
