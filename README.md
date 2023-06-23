@@ -68,29 +68,31 @@ public class Example {
 Calling `Example#fetchPost` will output something like:
 
 ```
-[48y9zeqq2c2d] fetchPost: fetching postId=2690201
-[48y9zeqq2c2d] fetchPost: got the response Response@3769fecf
-[48y9zeqq2c2d] fetchPost: got the post Post@5d244b79
-[48y9zeqq2c2d] fetchPost: [52] fetchComment: fetching commentId=52
-[48y9zeqq2c2d] fetchPost: [52] fetchComment: got the response Response@14cb4e66
-[48y9zeqq2c2d] fetchPost: [52] fetchComment: populated comment
-[48y9zeqq2c2d] fetchPost: [63] fetchComment: fetching commentId=63
-[48y9zeqq2c2d] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
-[48y9zeqq2c2d] fetchPost: [63] fetchComment: populated comment
-[48y9zeqq2c2d] fetchPost: successfully fetched the post
+TRACE [48y9zeqq2c2d] fetchPost: fetching postId=2690201
+TRACE [48y9zeqq2c2d] fetchPost: got the response Response@3769fecf
+TRACE [48y9zeqq2c2d] fetchPost: got the post Post@5d244b79
+TRACE [48y9zeqq2c2d] fetchPost: [52] fetchComment: fetching commentId=52
+TRACE [48y9zeqq2c2d] fetchPost: [52] fetchComment: got the response Response@14cb4e66
+TRACE [48y9zeqq2c2d] fetchPost: [52] fetchComment: populated comment
+TRACE [48y9zeqq2c2d] fetchPost: [63] fetchComment: fetching commentId=63
+TRACE [48y9zeqq2c2d] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
+TRACE [48y9zeqq2c2d] fetchPost: [63] fetchComment: populated comment
+TRACE [48y9zeqq2c2d] fetchPost: successfully fetched the post
 ```
 
 Second calling `Example#fetchPost` will output logs with different random `scopeId`:
 
 ```
-[juo0n1nal8m5] fetchPost: fetching postId=2690201
-[juo0n1nal8m5] fetchPost: got the response Response@3769fecf
+TRACE [juo0n1nal8m5] fetchPost: fetching postId=2690201
+TRACE [juo0n1nal8m5] fetchPost: got the response Response@3769fecf
 ...
-[juo0n1nal8m5] fetchPost: [63] fetchComment: populated comment
-[juo0n1nal8m5] fetchPost: successfully fetched the post
+TRACE [juo0n1nal8m5] fetchPost: [63] fetchComment: populated comment
+TRACE [juo0n1nal8m5] fetchPost: successfully fetched the post
 ```
 
 The `scope name` typically represents a method or block of code, while the `scope ID` is a unique identifier created for each new instance of a `ScopedLogger` at the time of a new invocation of a block of code represented by the `scope name`. When a `ScopedLogger` is created from another `ScopedLogger`, all the scope names and IDs are included in the log messages, which assists in tracking nested and interdependent log entries​.
+
+Note that `scopeId` can be set manually, like in the comments loop in the code above. Also, `null` value can be passed to the `scopeId` parameter. In this case, `scopeId` won't be shown. If you don't pass the `scopeId`, it's randomly generated using `ScopedLogger.createScopeId()` by default.
 
 ### `ru.mrgrd56.mgutils.concurrent.TaskInvoker`
 
