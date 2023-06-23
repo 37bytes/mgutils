@@ -59,7 +59,7 @@ public class Example {
         Post post = response.getBody();
         logger.trace("got the post {}", post);
         for (Comment comment : post.getComments()) {
-            Logger commentLogger = ScopedLogger.of(logger, "fetchComment:", comment.getId());
+            Logger commentLogger = ScopedLogger.of(logger, "fetchComment:", comment.getId()); // 3. Create nested `ScopedLogger`s if you wish
             commentLogger.trace("fetching commentId={}", comment.getId());
             
             Response commentResponse = http.request("http://localhost:8080/posts/" + postId);
