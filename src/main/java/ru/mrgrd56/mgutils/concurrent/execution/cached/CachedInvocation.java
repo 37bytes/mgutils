@@ -30,6 +30,29 @@ public class CachedInvocation<T> implements AutoCloseable {
         }
     }
 
+    /**
+     * @since 1.7.0
+     */
+    public T getOnce() {
+        try {
+            return get();
+        } finally {
+            close();
+        }
+    }
+
+    /**
+     * @since 1.7.0
+     */
+    public CompletableFuture<T> getOnceAsync() {
+        try {
+            return future().whenComplete((result, e) -> close());
+        } catch (Exception e) {
+            close();
+            throw e;
+        }
+    }
+
     @Override
     public void close() {
         // if isInvalidated is false then set it to true and invalidate.run()
