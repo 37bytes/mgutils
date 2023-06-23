@@ -39,6 +39,8 @@ Let's see the most useful classes in this library.
 
 _ru.mrgrd56.mgutils.logging.ScopedLogger_
 
+**Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!**
+
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
 It's important to note that `ScopedLogger` is a decorator class on the [slf4j](https://mvnrepository.com/artifact/org.slf4j/slf4j-api) `Logger` interface. This means that `ScopedLogger` is always created using a "basic"/"outer" logger and just changes its behavior. Any `Logger` can be used as a base, even another `ScopedLogger` (which lets you create nested `ScopedLogger`s).
@@ -48,8 +50,8 @@ public class Example {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     public Post fetchPost(int postId) {
-        Logger logger = ScopedLogger.of(log, "fetchPost:");
-        logger.trace("fetching postId={}", postId);
+        Logger logger = ScopedLogger.of(log, "fetchPost:"); // 1. Creating a ScopedLogger
+        logger.trace("fetching postId={}", postId); // 2. Using it like any other Logger!
         
         Response response = http.request("http://localhost:8080/posts/" + postId);
         logger.trace("got the response {}", response);
