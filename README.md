@@ -211,4 +211,4 @@ try {
 
 As soon as `completeAll()` is called, the remaining tasks are immediately marked as cancelled and an attempt to execute them by `TaskInvoker` will lead to `CancellationException`.
 
-Because `completeAll()` throws an exception when the tasks are cancelled, we have to collect the results manually, if needed. Note that it's also possible to pass a function without a returning value to `invoker.submit(...)`, that is not possible with `executor.invokeAll` (`Callable<Void>` still requires returning `null`).
+Since `completeAll()` throws an exception when the tasks are cancelled, we have to collect the results manually, if needed. Note that it's also possible to pass a function without a returning value to `invoker.submit(...)`, that is not possible with `executor.invokeAll` (`Callable<Void>` still requires returning `null`).
