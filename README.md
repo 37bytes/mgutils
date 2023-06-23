@@ -36,7 +36,7 @@ Let's see the most useful classes in this library.
 
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
-It's important to note that `ScopedLogger` is a decorator class on the [slf4j](https://central.sonatype.com/artifact/org.slf4j/slf4j-api) `Logger` interface. This means that `ScopedLogger` always created using a "basic"/"outer" logger and just changes its behavior. Any `Logger` can be used as basic, even another `ScopedLogger` (which lets you create nested `ScopedLogger`s).
+It's important to note that `ScopedLogger` is a decorator class on the [slf4j](https://mvnrepository.com/artifact/org.slf4j/slf4j-api) `Logger` interface. This means that `ScopedLogger` is always created using a "basic"/"outer" logger and just changes its behavior. Any `Logger` can be used as a base, even another `ScopedLogger` (which lets you create nested `ScopedLogger`s).
 
 ```java
 public class Example {
