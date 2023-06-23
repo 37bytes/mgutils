@@ -1,5 +1,7 @@
 package ru.mrgrd56.mgutils.random;
 
+import ru.mrgrd56.mgutils.concurrent.Lazy;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -14,13 +16,28 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>
  * Example usage:
  * <pre>
- * RandomIdGenerator generator = new RandomIdGenerator();
- * String randomIdentifier = generator.createIdentifier();
- * </pre>
+ * RandomIdGenerator generator = RandomIdGenerator.getInstance();
+ * String randomIdentifier = generator.createIdentifier();</pre>
+ * Examples of identifiers:
+ * <code>t9z8pfzh0hrd</code>, <code>356wqj2tw2xb</code>
+ *
+ * <br><br><p>
+ * As of version 1.5.0 this class is singleton. Its instance can be obtained using the {@link #getInstance()} method.
  *
  * @since 1.2.0
  */
 public class RandomIdGenerator {
+    private static final Lazy<RandomIdGenerator> instance = new Lazy<>(RandomIdGenerator::new);
+
+    private RandomIdGenerator() { }
+
+    /**
+     * @since 1.5.0
+     */
+    public static RandomIdGenerator getInstance() {
+        return instance.get();
+    }
+
     public static final int IDENTIFIER_LENGTH = 12;
     private static final long IDENTIFIER_MAX_VALUE = 4738381338321616895L; // zzzzzzzzzzzz in 36-radix
     private static final long IDENTIFIER_BOUND = IDENTIFIER_MAX_VALUE + 1L;

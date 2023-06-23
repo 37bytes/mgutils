@@ -93,7 +93,7 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 public class ScopedLogger extends PrefixedLogger {
-    private static final RandomIdGenerator idGenerator = new RandomIdGenerator();
+    private static final RandomIdGenerator idGenerator = RandomIdGenerator.getInstance();
 
     private final String prefixTemplate;
     private final Object[] prefixArgs;
