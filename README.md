@@ -36,6 +36,8 @@ Let's see the most useful classes in this library.
 
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
+It's important to note that `ScopedLogger` is a decorator class on the [slf4j](https://central.sonatype.com/artifact/org.slf4j/slf4j-api) `Logger` interface. This means that `ScopedLogger` always created using a "basic"/"outer" logger and just changes its behavior. Any `Logger` can be used as basic, even another `ScopedLogger` (which lets you create nested `ScopedLogger`s).
+
 ```java
 public class Example {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -93,6 +95,22 @@ TRACE [juo0n1nal8m5] fetchPost: successfully fetched the post
 The `scope name` typically represents a method or block of code, while the `scope ID` is a unique identifier created for each new instance of a `ScopedLogger` at the time of a new invocation of a block of code represented by the `scope name`. When a `ScopedLogger` is created from another `ScopedLogger`, all the scope names and IDs are included in the log messages, which assists in tracking nested and interdependent log entries​.
 
 Note that `scopeId` can be set manually, like in the comments loop in the code above. Also, `null` value can be passed to the `scopeId` parameter. In this case, `scopeId` won't be shown. If you don't pass the `scopeId`, it's randomly generated using `ScopedLogger.createScopeId()` by default.
+
+It's possible to create `ScopedLogger`s another way as well. You can use `ScopedLoggerFactory` to create `ScopedLogger`s with the same source logger:
+
+```java
+public class Example {
+    private final ScopedLogger logs = new ScopedLogger(LoggerFactory.getLogger(this.getClass()));
+    
+    public Post fetchPost(int postId) {
+        Logger logger = logs.createLogger("fetchPost:");
+        logger.trace("fetching postId={}", postId);
+        // <...>
+    }
+}
+```
+
+It will work the same way.
 
 ### `ru.mrgrd56.mgutils.concurrent.TaskInvoker`
 
