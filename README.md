@@ -92,7 +92,9 @@ TRACE [juo0n1nal8m5] fetchPost: [63] fetchComment: populated comment
 TRACE [juo0n1nal8m5] fetchPost: successfully fetched the post
 ```
 
-The `scope name` typically represents a method or block of code, while the `scope ID` is a unique identifier created for each new instance of a `ScopedLogger` at the time of a new invocation of a block of code represented by the `scope name`. When a `ScopedLogger` is created from another `ScopedLogger`, all the scope names and IDs are included in the log messages, which assists in tracking nested and interdependent log entries​.
+The identifiers used by `ScopedLogger` are called `scopeName` and `scopeId`. In the case above, in `logger`, the `scopeName` is `"fetchPost:"` and the `scopeName` is `"48y9zeqq2c2d"` (randomly generated).
+
+The `scopeName` typically represents a method or block of code, while the `scopeId` is a unique identifier created for each new instance of a `ScopedLogger` at the time of a new invocation of a block of code represented by the `scope name`. When a `ScopedLogger` is created from another `ScopedLogger`, all the scope names and IDs are included in the log messages, which assists in tracking nested and interdependent log entries​.
 
 Note that `scopeId` can be set manually, like in the comments loop in the code above. Also, `null` value can be passed to the `scopeId` parameter. In this case, `scopeId` won't be shown. If you don't pass the `scopeId`, it's randomly generated using `ScopedLogger.createScopeId()` by default.
 
