@@ -28,11 +28,11 @@ The library requires Java 8 or above.
 ```
 3. Paste this fragment into your dependency list. In case of Maven, it's the `<dependencies>` section in `pom.xml`.
 
-### Overview
+## Overview
 
 Let's see the most useful classes in this library.
 
-#### `ru.mrgrd56.mgutils.logging.ScopedLogger`
+### `ru.mrgrd56.mgutils.logging.ScopedLogger`
 
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
@@ -65,9 +65,34 @@ public class Example {
 }
 ```
 
+Calling `Example#fetchPost` will output something like:
+
+```
+[48y9zeqq2c2d] fetchPost: fetching postId=2690201
+[48y9zeqq2c2d] fetchPost: got the response Response@3769fecf
+[48y9zeqq2c2d] fetchPost: got the post Post@5d244b79
+[48y9zeqq2c2d] fetchPost: [52] fetchComment: fetching commentId=52
+[48y9zeqq2c2d] fetchPost: [52] fetchComment: got the response Response@14cb4e66
+[48y9zeqq2c2d] fetchPost: [52] fetchComment: populated comment
+[48y9zeqq2c2d] fetchPost: [63] fetchComment: fetching commentId=63
+[48y9zeqq2c2d] fetchPost: [63] fetchComment: got the response Response@4a7b18fd
+[48y9zeqq2c2d] fetchPost: [63] fetchComment: populated comment
+[48y9zeqq2c2d] fetchPost: successfully fetched the post
+```
+
+Second calling `Example#fetchPost` will output logs with different random `scopeId`:
+
+```
+[juo0n1nal8m5] fetchPost: fetching postId=2690201
+[juo0n1nal8m5] fetchPost: got the response Response@3769fecf
+...
+[juo0n1nal8m5] fetchPost: [63] fetchComment: populated comment
+[juo0n1nal8m5] fetchPost: successfully fetched the post
+```
+
 The `scope name` typically represents a method or block of code, while the `scope ID` is a unique identifier created for each new instance of a `ScopedLogger` at the time of a new invocation of a block of code represented by the `scope name`. When a `ScopedLogger` is created from another `ScopedLogger`, all the scope names and IDs are included in the log messages, which assists in tracking nested and interdependent log entries​.
 
-#### ru.mrgrd56.mgutils.concurrent.TaskInvoker
+### `ru.mrgrd56.mgutils.concurrent.TaskInvoker`
 
 The `TaskInvoker` class is designed to execute a specific set of tasks, distributing them among threads using an ExecutorService. Tasks can be submitted for execution, but the execution doesn't start immediately. Instead, all tasks are stored and later executed when the `completeAll()` method is called. This method also waits for all tasks to finish and returns the results. `TaskInvoker` supports the submission of both `Runnable` and `Callable` tasks, with or without return values​.
 
