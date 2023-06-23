@@ -117,7 +117,7 @@ public class Example {
 }
 ```
 
-It will work the same way.
+It works the same way, but you avoid using static methods and specifying the same logger every time.
 
 ### TaskInvoker
 
