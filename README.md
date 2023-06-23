@@ -118,4 +118,53 @@ It will work the same way.
 
 The `TaskInvoker` class is designed to execute a specific set of tasks, distributing them among threads using an ExecutorService. Tasks can be submitted for execution, but the execution doesn't start immediately. Instead, all tasks are stored and later executed when the `completeAll()` method is called. This method also waits for all tasks to finish and returns the results. `TaskInvoker` supports the submission of both `Runnable` and `Callable` tasks, with or without return values​.
 
-It can be considered as an alternative to the `ExecutorService#invokeAll` method without having to create a `List` explicitly.
+It can be considered as an alternative to the `ExecutorService#invokeAll` method without having to create a `Collection` of tasks and results explicitly.
+
+Using plain `ExecutorService`:
+
+```java
+ExecutorService executor = Executors.newFixedThreadPool(50);
+List<Callable<String>> tasks = new ArrayList<>();
+
+for (int i = 0; i < 60; i++) {
+    int number = i;
+    tasks.add(() -> {
+        // Here's your task returning some data
+        Thread.sleep(150);
+        return "Number " + number;
+    });
+}
+
+List<Future<String>> resultFutures;
+try {
+    resultFutures = executor.invokeAll(tasks);
+} catch (InterruptedException e) {
+    throw new RuntimeException(e);
+}
+
+List<String> results = resultFutures.stream()
+        .map(stringFuture -> {
+            try {
+                return stringFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        })
+        .collect(Collectors.toList());
+```
+
+Using `TaskInvoker`:
+
+```java
+ExecutorService executor = Executors.newFixedThreadPool(50);
+TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+for (int i = 0; i < 60; i++) {
+    int number = i;
+    invoker.submit(() -> {
+        // Here's your task returning some data
+        Thread.sleep(150);
+        return "Number " + number;
+    });
+}
+List<String> results = invoker.completeAll();
+```
