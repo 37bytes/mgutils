@@ -6,8 +6,10 @@ import ru.mrgrd56.mgutils.delegate.DefaultRunnableFactory;
 import ru.mrgrd56.mgutils.delegate.RunnableFactory;
 import ru.mrgrd56.mgutils.logging.ScopedLogger;
 
-import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @since 1.1
@@ -18,11 +20,7 @@ public class CachedInvoker {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ExecutorService executor;
-    private final Map<Object, CachedInvocation<?>> invocations = new ConcurrentHashMap<>();
-
-    public CachedInvoker() {
-        this(Executors.newCachedThreadPool());
-    }
+    private final ConcurrentHashMap<Object, CachedInvocation<?>> invocations = new ConcurrentHashMap<>();
 
     public CachedInvoker(ExecutorService executor) {
         this.executor = executor;
@@ -50,42 +48,36 @@ public class CachedInvoker {
         return invoke(hash, supplier, DEFAULT_RUNNABLE_FACTORY);
     }
 
-    public synchronized <T> CachedInvocation<T> invoke(Object hash, Callable<T> supplier, RunnableFactory runnableFactory) {
+    @SuppressWarnings("unchecked")
+    public <T> CachedInvocation<T> invoke(Object hash, Callable<T> supplier, RunnableFactory runnableFactory) {
         Logger logger = ScopedLogger.of(log, "CachedInvoker#invoke(" + hash + ")");
 
-        if (invocations.containsKey(hash)) {
-            logger.trace("using cached invocation");
-            return (CachedInvocation<T>) invocations.get(hash);
-        }
+        return (CachedInvocation<T>) invocations.computeIfAbsent(hash, k -> {
+            logger.trace("starting new invocation");
 
-        logger.trace("starting new invocation");
+            CompletableFuture<T> newFuture = new CompletableFuture<T>();
 
-        CompletableFuture<T> newFuture = new CompletableFuture<T>();
+            executor.submit(runnableFactory.create(() -> {
+                logger.trace("started new invocation");
 
-        executor.submit(runnableFactory.create(() -> {
-            logger.trace("started new invocation");
+                boolean isSuccess = true;
 
-            boolean isSuccess = true;
+                try {
+                    T result = supplier.call();
+                    newFuture.complete(result);
+                } catch (Throwable e) {
+                    isSuccess = false;
+                    newFuture.completeExceptionally(e);
+                } finally {
+                    String successfulness = isSuccess ? "successfully" : "exceptionally";
+                    logger.trace("{} finished the invocation", successfulness);
+                }
+            }));
 
-            try {
-                T result = supplier.call();
-                newFuture.complete(result);
-            } catch (Throwable e) {
-                isSuccess = false;
-                newFuture.completeExceptionally(e);
-            } finally {
-                String successfulness = isSuccess ? "successfully" : "exceptionally";
-                logger.trace("{} finished the invocation", successfulness);
-            }
-        }));
-
-        CachedInvocation<T> invocation = new CachedInvocation<T>(newFuture, () -> {
-            invocations.remove(hash);
-            logger.trace("invalidated the cached invocation");
+            return new CachedInvocation<>(newFuture, () -> {
+                invocations.remove(hash);
+                logger.trace("invalidated the cached invocation");
+            });
         });
-
-        invocations.put(hash, invocation);
-
-        return invocation;
     }
 }
