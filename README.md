@@ -32,7 +32,9 @@ The library requires Java 8 or above.
 
 Let's see the most useful classes in this library.
 
-### `ru.mrgrd56.mgutils.logging.ScopedLogger`
+### ScopedLogger
+
+_ru.mrgrd56.mgutils.logging.ScopedLogger_
 
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
@@ -114,7 +116,9 @@ public class Example {
 
 It will work the same way.
 
-### `ru.mrgrd56.mgutils.concurrent.TaskInvoker`
+### TaskInvoker
+
+_ru.mrgrd56.mgutils.concurrent.TaskInvoker_
 
 The `TaskInvoker` class is designed to execute a specific set of tasks, distributing them among threads using an ExecutorService. Tasks can be submitted for execution, but the execution doesn't start immediately. Instead, all tasks are stored and later executed when the `completeAll()` method is called. This method also waits for all tasks to finish and returns the results. `TaskInvoker` supports the submission of both `Runnable` and `Callable` tasks, with or without return values​.
 
