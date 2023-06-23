@@ -127,6 +127,18 @@ The `TaskInvoker` class is designed to execute a specific set of tasks, distribu
 
 It can be considered as an alternative to the `ExecutorService#invokeAll` method without having to create a `Collection` of tasks and results explicitly.
 
+Let's see some examples.
+
+We'll use this `doStuff` method as one that performs some long task.
+
+```java
+String doStuff(int number) throws Exception {
+    // Here's a task returning some data
+    Thread.sleep(150);
+    return "Number " + number;
+}
+```
+
 Using plain `ExecutorService`:
 
 ```java
@@ -135,11 +147,7 @@ List<Callable<String>> tasks = new ArrayList<>();
 
 for (int i = 0; i < 60; i++) {
     int number = i;
-    tasks.add(() -> {
-        // Here's your task returning some data
-        Thread.sleep(150);
-        return "Number " + number;
-    });
+    tasks.add(() -> doStuff(number));
 }
 
 List<Future<String>> resultFutures;
@@ -167,11 +175,7 @@ ExecutorService executor = Executors.newFixedThreadPool(50);
 TaskInvoker<String> invoker = new TaskInvoker<>(executor);
 for (int i = 0; i < 60; i++) {
     int number = i;
-    invoker.submit(() -> {
-        // Here's your task returning some data
-        Thread.sleep(150);
-        return "Number " + number;
-    });
+    invoker.submit(() -> doStuff(number));
 }
 List<String> results = invoker.completeAll();
 ```
@@ -183,16 +187,17 @@ ExecutorService executor = Executors.newFixedThreadPool(5);
 TaskInvoker<Void> invoker = new TaskInvoker<>(executor);
 
 List<String> results = Collections.synchronizedList(new ArrayList<>());
+AtomicInteger counter = new AtomicInteger(0); // just to know when to cancel the tasks
+
+final int MAX_COUNT = 100;
 
 for (int i = 0; i < 100; i++) {
     int number = i;
     invoker.submit(() -> {
-        // Here's your task returning some data
-        Thread.sleep(60);
-        if (results.size() >= 6) {
-            invoker.cancelAll();
+        if (counter.getAndIncrement() == 6) {
+            invoker.cancelAll(); // cancelling the remaining tasks
         }
-        results.add("Number " + number);
+        results.add(doStuff(number));
     });
 }
 try {
