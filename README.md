@@ -21,9 +21,9 @@ The library requires Java 8 or above.
 2. Copy the snippet for your package manager. E.g. for Maven you can copy code looking like this:
 ```xml
 <dependency>
-  <groupId>ru.mrgrd56</groupId>
-  <artifactId>mgutils</artifactId>
-  <version>CURRENT_VERSION_HERE</version>
+    <groupId>ru.mrgrd56</groupId>
+    <artifactId>mgutils</artifactId>
+    <version>CURRENT_VERSION_HERE</version>
 </dependency>
 ```
 3. Paste this fragment into your dependency list. In case of Maven, it's the `<dependencies>` section in `pom.xml`.
