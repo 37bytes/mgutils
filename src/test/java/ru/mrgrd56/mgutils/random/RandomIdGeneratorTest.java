@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RandomIdGeneratorTest {
-    RandomIdGenerator idGenerator = new RandomIdGenerator();
+    RandomIdGenerator idGenerator = RandomIdGenerator.getInstance();
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Test

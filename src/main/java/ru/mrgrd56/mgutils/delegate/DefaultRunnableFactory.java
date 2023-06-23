@@ -1,19 +1,17 @@
 package ru.mrgrd56.mgutils.delegate;
 
+import ru.mrgrd56.mgutils.concurrent.Lazy;
+
 /**
  * @since 1.1
  */
 public class DefaultRunnableFactory implements RunnableFactory {
-    private static DefaultRunnableFactory instance;
+    private static final Lazy<DefaultRunnableFactory> instance = new Lazy<>(DefaultRunnableFactory::new);
 
     private DefaultRunnableFactory() { }
 
     public static DefaultRunnableFactory getInstance() {
-        if (instance == null) {
-            instance = new DefaultRunnableFactory();
-        }
-
-        return instance;
+        return instance.get();
     }
 
     @Override
