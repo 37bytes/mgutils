@@ -1,5 +1,7 @@
 package ru.mrgrd56.mgutils.concurrent;
 
+import ru.mrgrd56.mgutils.delegate.ExceptionalRunnable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,9 +14,10 @@ import java.util.stream.Collectors;
  * Used for executing a specific set of tasks, distributing them among threads using {@link ExecutorService}.<br><br>
  * Main methods:<br>
  * <ul>
- *     <li>{@link #submit(Runnable)} - accepts a task. The task <u>DOES NOT</u> start executing;</li>
+ *     <li>{@link #submit(ExceptionalRunnable)} - accepts a task. The task <u>does not</u> start executing;</li>
  *     <li>{@link #completeAll()} - executes all accepted tasks using {@link #invokeAll}, waits for their completion, and returns the results.</li>
  * </ul>
+ *
  * @param <T> The type of value returned by the executed tasks.
  * @since 1.0
  */
@@ -27,16 +30,19 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Accepts a task by adding it to the list for execution. The task <u>DOES NOT</u> start executing.
+     * Accepts a task by adding it to the list for execution. The task <u>does not</u> start executing.
      */
     public void submit(Callable<T> task) {
         tasks.add(new InvokerCallable<>(task));
     }
 
     /**
-     * Accepts a task with no return value, adding it to the list for execution. The task <u>DOES NOT</u> start executing.
+     * Accepts a task with no return value, adding it to the list for execution. The task <u>does not</u> start executing.
+     *
+     * <br><br><p>
+     * Since v1.6.0 it takes {@link ExceptionalRunnable} instead of regular {@link Runnable}.
      */
-    public void submit(Runnable task) {
+    public void submit(ExceptionalRunnable task) {
         submit(() -> {
             task.run();
             return null;
@@ -44,7 +50,8 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Accepts tasks by adding them to the list for execution. The tasks <u>DO NOT</u> start executing.
+     * Accepts tasks by adding them to the list for execution. The tasks <u>do not</u> start executing.
+     *
      * @see #submit(Callable)
      */
     public void submitAll(Collection<Callable<T>> tasks) {
@@ -52,11 +59,15 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Accepts tasks with no return value, adding them to the list for execution. The tasks <u>DO NOT</u> start executing.
-     * @see #submit(Runnable)
+     * Accepts tasks with no return value, adding them to the list for execution. The tasks <u>do not</u> start executing.
+     *
+     * <br><br><p>
+     * Since v1.6.0 it takes a list of {@link ExceptionalRunnable}s instead of regular {@link Runnable}s.
+     *
+     * @see #submit(ExceptionalRunnable)
      * @see #submitAll(Collection)
      */
-    public void submitAllVoid(Collection<Runnable> tasks) {
+    public void submitAllVoid(Collection<ExceptionalRunnable> tasks) {
         List<Callable<T>> voidTasks = tasks.stream()
                 .map(task -> {
                     return (Callable<T>) () -> {
@@ -87,25 +98,79 @@ public class TaskInvoker<T> {
     }
 
     /**
+     * Executes all accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.<br>
+     * Uses the provided timeout.
+     *
+     * @since 1.6.0
+     */
+    public List<Future<T>> invokeAll(long timeout, TimeUnit unit) {
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return executor.invokeAll(tasks, timeout, unit);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            tasks.clear();
+        }
+    }
+
+    /**
      * Executes all still uncompleted tasks using {@link #invokeAll}, waits for their completion, and returns the results.<br>
      * The list of accepted tasks is cleared.
-     * @throws CancellationException Might be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
+     *
+     * @throws CancellationException
+     *         May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
      */
     public List<T> completeAll() throws CancellationException {
         if (tasks.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return invokeAll().stream().map(TaskInvoker::getFutureResult).collect(Collectors.toList());
+        return completeFutures(invokeAll());
+    }
+
+    /**
+     * Executes all still uncompleted tasks using {@link #invokeAll}, waits for their completion, and returns the results.<br>
+     * The list of accepted tasks is cleared.<br>
+     * Uses the provided timeout.
+     *
+     * @throws CancellationException
+     *         May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.<br>
+     *         It is also thrown if the timeout has been exceeded.
+     *
+     * @since 1.6.0
+     */
+    public List<T> completeAll(long timeout, TimeUnit unit) throws CancellationException {
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return completeFutures(invokeAll(timeout, unit));
     }
 
     /**
      * Cancels all the accepted tasks. If attempted to execute, these tasks will throw a {@link CancellationException}.<br>
-     * Multiple calls to the method for the same tasks will not lead to anything.
+     * Multiple calls to the method for the same tasks will not lead to anything.<br>
+     * Clears the accepted tasks list.
      */
     public void cancelAll() {
-        for (InvokerCallable<T> task : this.tasks) {
-            task.cancel();
+        if (this.tasks.isEmpty()) {
+            return;
+        }
+
+        synchronized (this.tasks) {
+            if (!this.tasks.isEmpty()) {
+                try {
+                    for (InvokerCallable<T> task : this.tasks) {
+                        task.cancel();
+                    }
+                } finally {
+                    tasks.clear();
+                }
+            }
         }
     }
 
@@ -113,8 +178,18 @@ public class TaskInvoker<T> {
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
+            if (e.getCause() instanceof CancellationException) {
+                throw (CancellationException) e.getCause();
+            }
+
             throw new RuntimeException(e);
         }
+    }
+
+    private static <T> List<T> completeFutures(List<Future<T>> futures) {
+        return futures.stream()
+                .map(TaskInvoker::getFutureResult)
+                .collect(Collectors.toList());
     }
 
     @Override
