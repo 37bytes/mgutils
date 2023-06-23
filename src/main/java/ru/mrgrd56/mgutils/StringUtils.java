@@ -31,7 +31,6 @@ public final class StringUtils {
      */
     public static String joinNotBlank(CharSequence delimiter, Object... objects) {
         return Stream.of(objects)
-                .filter(Objects::nonNull)
                 .map(ObjectUtils::toString)
                 .filter(org.apache.commons.lang3.StringUtils::isNotBlank)
                 .collect(Collectors.joining(delimiter));
@@ -63,7 +62,6 @@ public final class StringUtils {
      */
     public static String joinNotBlankTrimming(CharSequence delimiter, Object... objects) {
         return Stream.of(objects)
-                .filter(Objects::nonNull)
                 .map(ObjectUtils::toString)
                 .filter(org.apache.commons.lang3.StringUtils::isNotBlank)
                 .map(String::trim)
