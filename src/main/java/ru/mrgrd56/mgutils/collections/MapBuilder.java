@@ -2,6 +2,7 @@ package ru.mrgrd56.mgutils.collections;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.mrgrd56.mgutils.delegate.MapSupplier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,9 +10,12 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Provides an interface for creating a mutable {@link Map}.<br>
+ * Provides an interface for creating a <i>mutable</i> {@link Map}.<br>
  * In created {@link Map}s, both keys and values can be {@code null}, unlike {@code Map#of} and {@code Map#ofEntries}.<br>
- * The created implementation of {@link Map} can be manually specified, by default the {@link HashMap} is used.
+ * The created implementation of {@link Map} can be manually specified, by default the {@link HashMap} is used.<br>
+ * <br>
+ * This class can be used not only to build a new {@link Map} but also to populate an existing <i>mutable</i> {@link Map}
+ * that can be provided using the {@link #MapBuilder(Map)} constructor.
  * @param <K> The type of the key.
  * @param <V> The type of the value.
  * @since 1.0
@@ -63,6 +67,18 @@ public class MapBuilder<K, V> {
      */
     public MapBuilder<K, V> put(@NotNull Map.Entry<K, V> entry) {
         return put(entry.getKey(), entry.getValue());
+    }
+
+    /**
+     * Inserts all of the mappings from the specified map into the created {@link Map}.
+     *
+     * @param map mappings to be stored in the created {@link Map}; must not be null.
+     * @throws NullPointerException if the specified map is null.
+     * @since 1.8.0
+     */
+    public MapBuilder<K, V> putAll(@NotNull Map<? extends K, ? extends V> map) {
+        this.map.putAll(map);
+        return this;
     }
 
     /**
@@ -122,7 +138,7 @@ public class MapBuilder<K, V> {
      * Returns the created {@link Map} instance, the implementation depends on the {@code mapFactory}
      * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.
      * @throws ClassCastException Thrown if the {@link M} type is not assignable from the actual type of the built {@code map}.
-     * @since 1.7.1
+     * @since 1.8.0
      */
     @SuppressWarnings("unchecked")
     public <M extends Map<K, V>> M buildAs() throws ClassCastException {
@@ -143,7 +159,7 @@ public class MapBuilder<K, V> {
      */
     @SafeVarargs
     public static <K, V> Map<K, V> fromEntries(@Nullable Map.Entry<K, V>... entries) {
-        return fromEntriesInternal(new MapBuilder<>(), entries);
+        return populateBuilder(new MapBuilder<>(), entries).build();
     }
 
     /**
@@ -155,7 +171,7 @@ public class MapBuilder<K, V> {
      */
     @SafeVarargs
     public static <K, V, M extends Map<K, V>> M fromEntries(M initialMap, @Nullable Map.Entry<K, V>... entries) {
-        return fromEntriesInternal(new MapBuilder<>(initialMap), entries);
+        return populateBuilder(new MapBuilder<>(initialMap), entries).buildAs();
     }
 
     /**
@@ -163,20 +179,20 @@ public class MapBuilder<K, V> {
      * Null entries are ignored.
      */
     @SafeVarargs
-    public static <K, V, M extends Map<K, V>> M fromEntries(Supplier<M> mapFactory, @Nullable Map.Entry<K, V>... entries) {
-        return fromEntriesInternal(new MapBuilder<>(mapFactory), entries);
+    public static <K, V, M extends Map<K, V>> M fromEntries(MapSupplier<M> mapFactory, @Nullable Map.Entry<K, V>... entries) {
+        return populateBuilder(new MapBuilder<>(mapFactory), entries).buildAs();
     }
 
     @SafeVarargs
-    private static <K, V, M extends Map<K, V>> M fromEntriesInternal(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
-        Objects.requireNonNull(entries);
+    private static <K, V> MapBuilder<K, V> populateBuilder(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
+        Objects.requireNonNull(entries, "Entries array must not be null itself");
 
         for (Map.Entry<K, V> entry : entries) {
             if (entry != null) {
                 builder.put(entry);
             }
         }
-        return builder.buildAs();
+        return builder;
     }
 
     /**

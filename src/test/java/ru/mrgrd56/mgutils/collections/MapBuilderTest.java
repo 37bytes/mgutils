@@ -1,5 +1,6 @@
 package ru.mrgrd56.mgutils.collections;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class MapBuilderTest {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -95,6 +97,29 @@ public class MapBuilderTest {
             // expected!
             log.info("ClassCastException thrown (success)", e);
         }
+    }
+
+    @Test
+    public void testCastingPerformance() {
+        StopWatch stopWatch1 = StopWatch.createStarted();
+
+        for (int i = 0; i < 100_000_000; i++) {
+            Map<String, Object> customMap = MapBuilder.fromEntries(
+                    MapBuilder.entry("lorem", "ipsum")
+            );
+        }
+
+        log.info("NO_CASTING took {}", stopWatch1.formatTime());
+
+        StopWatch stopWatch2 = StopWatch.createStarted();
+
+        for (int i = 0; i < 100_000_000; i++) {
+            HashMap<String, Object> customMap = MapBuilder.fromEntries(HashMap::new,
+                    MapBuilder.entry("lorem", "ipsum")
+            );
+        }
+
+        log.info("CASTING took {}", stopWatch2.formatTime());
     }
 
     private static class CustomMap extends HashMap<String, Object> {
