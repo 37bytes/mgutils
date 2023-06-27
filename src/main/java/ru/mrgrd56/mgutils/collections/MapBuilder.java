@@ -31,7 +31,7 @@ public class MapBuilder<K, V> {
      * The {@link Map} created by {@code mapFactory} must support the {@link Map#put} operation.
      * @param mapFactory The object that creates a {@link Map} instance.
      */
-    public MapBuilder(@NotNull Supplier<Map<K, V>> mapFactory) {
+    public MapBuilder(@NotNull Supplier<? extends Map<K, V>> mapFactory) {
         Objects.requireNonNull(mapFactory);
         this.map = Objects.requireNonNull(mapFactory.get());
     }
@@ -111,14 +111,26 @@ public class MapBuilder<K, V> {
 
     /**
      * Returns the created {@link Map} instance, the implementation depends on the {@code mapFactory}
-     * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.
+     * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.<br>
+     * The returned {@link Map} has the same reference as the {@code initialMap} if passed.
      */
     public Map<K, V> build() {
         return map;
     }
 
     /**
-     * Creates an {@link Entry} instance.
+     * Returns the created {@link Map} instance, the implementation depends on the {@code mapFactory}
+     * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.
+     * @throws ClassCastException Thrown if the {@link M} type is not assignable from the actual type of the built {@code map}.
+     * @since 1.7.1
+     */
+    @SuppressWarnings("unchecked")
+    public <M extends Map<K, V>> M buildAs() throws ClassCastException {
+        return (M) map;
+    }
+
+    /**
+     * Creates an {@link Entry} instance. Supports {@code null} key and value.
      */
     @NotNull
     public static <K, V> Map.Entry<K, V> entry(@Nullable K key, @Nullable V value) {
@@ -136,25 +148,27 @@ public class MapBuilder<K, V> {
 
     /**
      * Builds a {@link Map} instance using the specified {@code initialMap}, populating it with the provided {@code entries}.<br>
-     * Null entries are ignored.
+     * Null entries are ignored.<br>
+     * It's guaranteed that the {@link Map} object returned by {@link #build()}
+     * will have the same reference as the {@code initialMap}.
+     * @since 1.3.0
      */
     @SafeVarargs
-    public static <K, V> Map<K, V> fromEntries(Map<K, V> initialMap, @Nullable Map.Entry<K, V>... entries) {
+    public static <K, V, M extends Map<K, V>> M fromEntries(M initialMap, @Nullable Map.Entry<K, V>... entries) {
         return fromEntriesInternal(new MapBuilder<>(initialMap), entries);
     }
 
     /**
      * Creates a {@link Map} instance using the specified {@code mapFactory}, populating it with the provided {@code entries}.<br>
      * Null entries are ignored.
-     * @since 1.3.0
      */
     @SafeVarargs
-    public static <K, V> Map<K, V> fromEntries(Supplier<Map<K, V>> mapFactory, @Nullable Map.Entry<K, V>... entries) {
+    public static <K, V, M extends Map<K, V>> M fromEntries(Supplier<M> mapFactory, @Nullable Map.Entry<K, V>... entries) {
         return fromEntriesInternal(new MapBuilder<>(mapFactory), entries);
     }
 
     @SafeVarargs
-    private static <K, V> Map<K, V> fromEntriesInternal(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
+    private static <K, V, M extends Map<K, V>> M fromEntriesInternal(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
         Objects.requireNonNull(entries);
 
         for (Map.Entry<K, V> entry : entries) {
@@ -162,7 +176,7 @@ public class MapBuilder<K, V> {
                 builder.put(entry);
             }
         }
-        return builder.build();
+        return builder.buildAs();
     }
 
     /**

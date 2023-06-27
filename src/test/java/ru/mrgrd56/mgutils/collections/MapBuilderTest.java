@@ -61,4 +61,53 @@ public class MapBuilderTest {
         Assertions.assertFalse(map.containsKey("never2"));
         Assertions.assertTrue(map.containsKey("always"));
     }
+
+    @Test
+    public void testBuildAs() {
+        CustomMap customMap = new CustomMap(
+                MapBuilder.fromEntries(
+                        MapBuilder.entry("lorem", "ipsum")
+                )
+        );
+
+        CustomMap customMap2 = new MapBuilder<>(customMap)
+                .put("lorem", "sit amet")
+                .buildAs();
+
+        Assertions.assertInstanceOf(CustomMap.class, customMap2);
+        Assertions.assertSame(customMap, customMap2);
+        Assertions.assertEquals("sit amet", customMap2.getLorem());
+    }
+
+    @Test
+    public void testBuildAsError() {
+        Map<String, Object> customMap = MapBuilder.fromEntries(
+                MapBuilder.entry("lorem", "ipsum")
+        );
+
+        try {
+            CustomMap customMap2 = new MapBuilder<>(customMap)
+                    .put("lorem", "sit amet")
+                    .buildAs();
+
+            Assertions.fail("ClassCastException not thrown");
+        } catch (ClassCastException e) {
+            // expected!
+            log.info("ClassCastException thrown (success)", e);
+        }
+    }
+
+    private static class CustomMap extends HashMap<String, Object> {
+        public CustomMap(Map<? extends String, ?> m) {
+            super(m);
+        }
+
+        public String getLorem() {
+            return (String) this.get("lorem");
+        }
+
+        public void setLorem(String lorem) {
+            this.put("lorem", lorem);
+        }
+    }
 }
