@@ -27,7 +27,7 @@ public class MapBuilder<K, V> {
     }
 
     /**
-     * Creates an instance of {@link MapBuilder} using the provided {@code mapFactory} to fromEntries a {@link Map}.<br>
+     * Creates an instance of {@link MapBuilder} using the provided {@code mapFactory} to create a {@link Map}.<br>
      * The {@link Map} created by {@code mapFactory} must support the {@link Map#put} operation.
      * @param mapFactory The object that creates a {@link Map} instance.
      */
