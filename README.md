@@ -177,10 +177,12 @@ Using `TaskInvoker`:
 ```java
 ExecutorService executor = Executors.newFixedThreadPool(50);
 TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+
 for (int i = 0; i < 60; i++) {
     int number = i;
     invoker.submit(() -> doStuff(number));
 }
+
 List<String> results = invoker.completeAll();
 ```
 
