@@ -32,8 +32,8 @@ The library requires Java 8 or above.
 
 Let's see the most useful classes in this library.
 
-- [ScopedLogger](https://github.com/MRGRD56/mgutils/tree/master#scopedLogger)
-- [TaskInvoker](https://github.com/MRGRD56/mgutils/tree/master#taskinvoker)
+- [ScopedLogger](#scopedLogger)
+- [TaskInvoker](#taskinvoker)
 
 ### ScopedLogger
 
