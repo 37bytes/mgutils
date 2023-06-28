@@ -32,14 +32,14 @@ The library requires Java 8 or above.
 
 Let's see the most useful classes in this library.
 
-- [ScopedLogger](#scopedLogger)
+- [ScopedLogger](#scopedlogger)
 - [TaskInvoker](#taskinvoker)
-- [MapBuilder](#mapBuilder)
-- [CachedInvoker](#cachedInvoker)
+- [MapBuilder](#mapbuilder)
+- [CachedInvoker](#cachedinvoker)
 
 ### ScopedLogger
 
-_ru.mrgrd56.mgutils.logging.ScopedLogger_
+[_ru.mrgrd56.mgutils.logging.ScopedLogger_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/logging/ScopedLogger.java)
 
 **Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!**
 
@@ -125,7 +125,7 @@ It works the same way, but you avoid using static methods and specifying the sam
 
 ### TaskInvoker
 
-_ru.mrgrd56.mgutils.concurrent.TaskInvoker_
+[_ru.mrgrd56.mgutils.concurrent.TaskInvoker_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/concurrent/TaskInvoker.java)
 
 The `TaskInvoker` class is designed to execute a specific set of tasks, distributing them among threads using an ExecutorService. Tasks can be submitted for execution, but the execution doesn't start immediately. Instead, all tasks are stored and later executed when the `completeAll()` method is called. This method also waits for all tasks to finish and returns the results. `TaskInvoker` supports the submission of both `Runnable` and `Callable` tasks, with or without return values​.
 
@@ -219,7 +219,7 @@ Since `completeAll()` throws an exception when the tasks are cancelled, we have 
 
 ### MapBuilder
 
-_ru.mrgrd56.mgutils.collections.MapBuilder_
+[_ru.mrgrd56.mgutils.collections.MapBuilder_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/collections/MapBuilder.java)
 
 Created as an alternative for Java `Map.ofEntries` which is not available in Java 8. But unlike `Map.ofEntries`, `MapBuilder` is designed for creating _mutable_ `Map`s as well as populating existing ones.
 
@@ -260,6 +260,6 @@ Here's an example:
 
 ### CachedInvoker
 
-_ru.mrgrd56.mgutils.concurrent.execution.cached.CachedInvoker_
+[_ru.mrgrd56.mgutils.concurrent.execution.cached.CachedInvoker_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/concurrent/execution/cached/CachedInvoker.java)
 
 no description yet
