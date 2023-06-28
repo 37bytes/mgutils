@@ -221,7 +221,42 @@ Since `completeAll()` throws an exception when the tasks are cancelled, we have 
 
 _ru.mrgrd56.mgutils.collections.MapBuilder_
 
-no description yet
+Created as an alternative for Java `Map.ofEntries` which is not available in Java 8. But unlike `Map.ofEntries`, `MapBuilder` is designed for creating _mutable_ `Map`s as well as populating existing ones.
+
+There is also an alternative to Java `Map.entry` - `MapBuilder.entry`, which is also unavailable in Java 8. It creates an instance of `Map.Entry` using a custom implementation. Unlike `Map.entry`, `MapBuilder.entry` allows using `null` keys and values.
+
+Here's an example:
+
+```java
+    public void testMapBuilder() {
+        // creating new map
+        ConcurrentHashMap<String, Object> response = MapBuilder.create(ConcurrentHashMap::new, // specifying custom map implementation
+                MapBuilder.entry("code", 200),
+                MapBuilder.entry("status", "OK"),
+                MapBuilder.entry("data", MapBuilder.create( // using the default (HashMap) implementation
+                        MapBuilder.entry("person", MapBuilder.create(LinkedHashMap::new, // specifying custom map implementation
+                                MapBuilder.entry("id", 42125124),
+                                MapBuilder.entry("name", "John")
+                        ))
+                ))
+        );
+
+        // populating existing map, returns the same map
+        // `response` is modified
+        // `sameMap` and `response` refer to the same object
+        ConcurrentMap<String, Object> sameMap = MapBuilder.populate(response,
+                Map.entry("version", "1.4.2"),
+                Map.entry("hasData", response.get("data") != null));
+
+        // using alternative syntax
+        Map<String, Object> response2 = new MapBuilder<String, Object>(ConcurrentHashMap::new)
+                .put("code", 200)
+                .put("data", new MapBuilder<>()
+                        .put("personId", 42125124)
+                        .build())
+                .build();
+    }
+```
 
 ### CachedInvoker
 
