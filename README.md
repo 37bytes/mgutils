@@ -32,12 +32,14 @@ The library requires Java 8 or above.
 
 Let's see the most useful classes in this library.
 
-- [ScopedLogger](https://github.com/MRGRD56/mgutils/tree/master#scopedLogger)
-- [TaskInvoker](https://github.com/MRGRD56/mgutils/tree/master#taskinvoker)
+- [ScopedLogger](#scopedlogger)
+- [TaskInvoker](#taskinvoker)
+- [MapBuilder](#mapbuilder)
+- [CachedInvoker](#cachedinvoker)
 
 ### ScopedLogger
 
-_ru.mrgrd56.mgutils.logging.ScopedLogger_
+[_ru.mrgrd56.mgutils.logging.ScopedLogger_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/logging/ScopedLogger.java)
 
 **Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!**
 
@@ -123,7 +125,7 @@ It works the same way, but you avoid using static methods and specifying the sam
 
 ### TaskInvoker
 
-_ru.mrgrd56.mgutils.concurrent.TaskInvoker_
+[_ru.mrgrd56.mgutils.concurrent.TaskInvoker_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/concurrent/TaskInvoker.java)
 
 The `TaskInvoker` class is designed to execute a specific set of tasks, distributing them among threads using an ExecutorService. Tasks can be submitted for execution, but the execution doesn't start immediately. Instead, all tasks are stored and later executed when the `completeAll()` method is called. This method also waits for all tasks to finish and returns the results. `TaskInvoker` supports the submission of both `Runnable` and `Callable` tasks, with or without return values​.
 
@@ -175,10 +177,12 @@ Using `TaskInvoker`:
 ```java
 ExecutorService executor = Executors.newFixedThreadPool(50);
 TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+
 for (int i = 0; i < 60; i++) {
     int number = i;
     invoker.submit(() -> doStuff(number));
 }
+
 List<String> results = invoker.completeAll();
 ```
 
@@ -214,3 +218,50 @@ try {
 As soon as `completeAll()` is called, the remaining tasks are immediately marked as cancelled and an attempt to execute them by `TaskInvoker` will lead to `CancellationException`.
 
 Since `completeAll()` throws an exception when the tasks are cancelled, we have to collect the results manually, if needed. Note that it's also possible to pass a function without a returning value to `invoker.submit(...)`, that is not possible with `executor.invokeAll` (`Callable<Void>` still requires returning `null`).
+
+### MapBuilder
+
+[_ru.mrgrd56.mgutils.collections.MapBuilder_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/collections/MapBuilder.java)
+
+Created as an alternative for Java `Map.ofEntries` which is not available in Java 8. But unlike `Map.ofEntries`, `MapBuilder` is designed for creating _mutable_ `Map`s as well as populating existing ones.
+
+There is also an alternative to Java `Map.entry` - `MapBuilder.entry`, which is also unavailable in Java 8. It creates an instance of `Map.Entry` using a custom implementation. Unlike `Map.entry`, `MapBuilder.entry` allows using `null` keys and values.
+
+Here's an example:
+
+```java
+    public void testMapBuilder() {
+        // creating new map
+        ConcurrentHashMap<String, Object> response = MapBuilder.create(ConcurrentHashMap::new, // specifying custom map implementation
+                MapBuilder.entry("code", 200),
+                MapBuilder.entry("status", "OK"),
+                MapBuilder.entry("data", MapBuilder.create( // using the default (HashMap) implementation
+                        MapBuilder.entry("person", MapBuilder.create(LinkedHashMap::new, // specifying custom map implementation
+                                MapBuilder.entry("id", 42125124),
+                                MapBuilder.entry("name", "John")
+                        ))
+                ))
+        );
+
+        // populating existing map, returns the same map
+        // `response` is modified
+        // `sameMap` and `response` refer to the same object
+        ConcurrentMap<String, Object> sameMap = MapBuilder.populate(response,
+                Map.entry("version", "1.4.2"),
+                Map.entry("hasData", response.get("data") != null));
+
+        // using alternative syntax
+        Map<String, Object> response2 = new MapBuilder<String, Object>(ConcurrentHashMap::new)
+                .put("code", 200)
+                .put("data", new MapBuilder<>()
+                        .put("personId", 42125124)
+                        .build())
+                .build();
+    }
+```
+
+### CachedInvoker
+
+[_ru.mrgrd56.mgutils.concurrent.execution.cached.CachedInvoker_](https://github.com/MRGRD56/mgutils/blob/master/src/main/java/ru/mrgrd56/mgutils/concurrent/execution/cached/CachedInvoker.java)
+
+no description yet
