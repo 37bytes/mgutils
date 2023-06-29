@@ -10,6 +10,27 @@ public final class StringUtils {
     private StringUtils() { }
 
     /**
+     * Replaces the first occurrence of the character {@code oldChar} in the {@code string} with the character {@code newChar}.
+     *
+     * @param string  The original string in which the replacement needs to be performed.
+     * @param oldChar The character that needs to be replaced.
+     * @param newChar The character to replace with.
+     * @return The string with the character replaced.
+     * @since 1.9.0
+     */
+    public static String replaceOnce(String string, char oldChar, char newChar) {
+        int index = string.indexOf(oldChar);
+
+        if (index == -1) {
+            return string;
+        }
+
+        char[] chars = string.toCharArray();
+        chars[index] = newChar;
+        return String.valueOf(chars);
+    }
+
+    /**
      * Joins the {@code strings} that are not empty, placing the {@code delimiter} between them.
      *
      * @param delimiter The string separator.
