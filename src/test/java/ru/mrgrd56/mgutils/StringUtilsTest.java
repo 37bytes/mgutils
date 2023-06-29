@@ -2,8 +2,16 @@ package ru.mrgrd56.mgutils;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.mrgrd56.mgutils.performance.PerformanceTest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StringUtilsTest {
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     @Test
     public void testJoinNotBlank() {
         Assertions.assertEquals(" lorem  ipsum dolor sit  amet",
@@ -38,6 +46,41 @@ public class StringUtilsTest {
 
         Assertions.assertEquals("",
                 StringUtils.joinNotBlank(" ", new StringLike("  ")));
+    }
+
+    @Test
+    public void testReplaceOnce() {
+        PerformanceTest test = PerformanceTest.create("ReplaceOnce", log).start();
+
+        List<String> initialDecimals = new ArrayList<>();
+
+        for (int i = 0; i < 5_000_000; i++) {
+            initialDecimals.add(StringUtils.replaceOnce(Double.toString(Math.random()), '.', ','));
+        }
+
+        test.split("Preparation");
+
+        for (String decimal : initialDecimals) {
+            decimal.replace(',', '.');
+        }
+
+        test.split("Native");
+
+        for (String decimal : initialDecimals) {
+            StringUtils.replaceOnce(decimal, ',', '.');
+        }
+
+        test.split("Mgutils");
+
+        for (String decimal : initialDecimals) {
+            org.apache.commons.lang3.StringUtils.replaceOnce(decimal, ",", ".");
+        }
+
+        test.split("Commons");
+
+        test.finish();
+
+        Object __null = null;
     }
 
     private static class StringLike {
