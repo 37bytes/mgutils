@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class MapBuilderTest {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -189,6 +190,36 @@ public class MapBuilderTest {
         }
 
         log.info("CASTING took {}", stopWatch2.formatTime());
+    }
+
+    @Test
+    public void testMapBuilder() {
+        // creating new map
+        ConcurrentHashMap<String, Object> response = MapBuilder.create(ConcurrentHashMap::new, // specifying custom map implementation
+                MapBuilder.entry("code", 200),
+                MapBuilder.entry("status", "OK"),
+                MapBuilder.entry("data", MapBuilder.create( // using the default (HashMap) implementation
+                        MapBuilder.entry("person", MapBuilder.create(LinkedHashMap::new, // specifying custom map implementation
+                                MapBuilder.entry("id", 42125124),
+                                MapBuilder.entry("name", "John")
+                        ))
+                ))
+        );
+
+        // populating existing map, returns the same map
+        // `response` is modified
+        // `sameMap` and `response` refer to the same object
+        ConcurrentMap<String, Object> sameMap = MapBuilder.populate(response,
+                MapBuilder.entry("version", "1.4.2"),
+                MapBuilder.entry("hasData", response.get("data") != null));
+
+        // using alternative syntax
+        Map<String, Object> response2 = new MapBuilder<String, Object>(ConcurrentHashMap::new)
+                .put("code", 200)
+                .put("data", new MapBuilder<>()
+                        .put("personId", 42125124)
+                        .build())
+                .build();
     }
 
     private HashMap<String, Object> createMap() {
