@@ -1,5 +1,8 @@
 package ru.mrgrd56.mgutils;
 
+/**
+ * @since 1.9.0
+ */
 public final class ExceptionUtils {
     private ExceptionUtils() { }
 
@@ -9,7 +12,7 @@ public final class ExceptionUtils {
      * If it's not, wraps it using the {@link RuntimeException#RuntimeException(Throwable)} constructor.
      * @since 1.9.0
      */
-    public RuntimeException asRuntimeException(Throwable exception) {
+    public static RuntimeException asRuntimeException(Throwable exception) {
         if (exception instanceof RuntimeException) {
             return (RuntimeException) exception;
         }
