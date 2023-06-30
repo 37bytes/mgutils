@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.mrgrd56.mgutils.performance.PerformanceTest;
+import ru.mrgrd56.mgutils._SUSPENDED_.performance.PerformanceTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,13 +49,30 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testReplaceOnce() {
+    public void testReplacement() {
+        Assertions.assertEquals("1,4.5", StringUtils.replaceOnce("1.4.5", '.', ','));
+        Assertions.assertEquals("1.4.5", StringUtils.replaceOnce("1.4.5", 'a', ','));
+        Assertions.assertEquals("1.4,5", StringUtils.replaceLastOnce("1.4.5", '.', ','));
+        Assertions.assertEquals("1.4.5", StringUtils.replaceLastOnce("1.4.5", 'a', 'b'));
+        Assertions.assertEquals("", StringUtils.replaceLastOnce("", '.', ','));
+        Assertions.assertEquals("1.5.5", StringUtils.setCharAt("1.4.5", 2, '5'));
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            StringUtils.setCharAt(null, 2, '5');
+        });
+    }
+
+    @Test
+    public void testReplaceOncePerformance() {
         PerformanceTest test = PerformanceTest.create("ReplaceOnce", log).start();
 
         List<String> initialDecimals = new ArrayList<>();
 
-        for (int i = 0; i < 5_000_000; i++) {
+        for (int i = 0; i < 400_000; i++) {
             initialDecimals.add(StringUtils.replaceOnce(Double.toString(Math.random()), '.', ','));
+        }
+
+        for (int i = 0; i < 5; i++) {
+            initialDecimals.addAll(initialDecimals);
         }
 
         test.split("Preparation");
@@ -71,6 +88,18 @@ public class StringUtilsTest {
         }
 
         test.split("Mgutils");
+
+        for (String decimal : initialDecimals) {
+            int index = decimal.indexOf(',');
+
+            if (index != -1) {
+                StringBuilder stringBuilder = new StringBuilder(decimal);
+                stringBuilder.setCharAt(index, '.');
+                stringBuilder.toString();
+            }
+        }
+
+        test.split("Mgutils-SB");
 
         for (String decimal : initialDecimals) {
             org.apache.commons.lang3.StringUtils.replaceOnce(decimal, ",", ".");

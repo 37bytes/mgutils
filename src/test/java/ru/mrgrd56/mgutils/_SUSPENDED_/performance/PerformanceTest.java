@@ -1,4 +1,4 @@
-package ru.mrgrd56.mgutils.performance;
+package ru.mrgrd56.mgutils._SUSPENDED_.performance;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @since 1.9.0
+ * //TODO v1.10.0
  */
 public class PerformanceTest {
     private static final String ONE_DEEPNESS_PREFIX = "║ ";
