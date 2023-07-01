@@ -35,6 +35,60 @@ public class TaskInvokerTest {
     }
 
     @Test
+    public void testTaskInvokerVoid() {
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+        TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 60; i++) {
+            invoker.submit(() -> {
+                // Here's your task
+                Thread.sleep(50);
+            });
+        }
+
+        List<String> results = invoker.completeAll();
+
+        Assertions.assertEquals(0, results.size());
+    }
+
+    @Test
+    public void testTaskInvokerNull() {
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+        TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 60; i++) {
+            invoker.submit(() -> {
+                // Here's your task
+                Thread.sleep(50);
+                return null;
+            });
+        }
+
+        List<String> results = invoker.completeAll();
+
+        Assertions.assertEquals(60, results.size());
+    }
+
+    @Test
+    public void testTaskInvokerConsumer() {
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        TaskInvoker<Integer> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 8; i++) {
+            int number = i;
+            invoker.submit((consumer) -> {
+                for (int j = 0; j < 1_000_000; j++) {
+                    consumer.accept(number * j);
+                }
+            });
+        }
+
+        List<Integer> results = invoker.completeAll();
+
+        Assertions.assertEquals(8 * 1_000_000, results.size());
+    }
+
+    @Test
     public void testTaskInvokerCancellation() {
         ExecutorService executor = Executors.newFixedThreadPool(5);
         TaskInvoker<Void> invoker = new TaskInvoker<>(executor);

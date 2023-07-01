@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mrgrd56.mgutils._SUSPENDED_.performance.PerformanceTest;
+import ru.mrgrd56.mgutils.concurrent.TaskInvoker;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class StringUtilsTest {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -63,17 +66,21 @@ public class StringUtilsTest {
 
     @Test
     public void testReplaceOncePerformance() {
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        TaskInvoker<String> invoker = new TaskInvoker<>(executor);
+
         PerformanceTest test = PerformanceTest.create("ReplaceOnce", log).start();
 
-        List<String> initialDecimals = new ArrayList<>();
-
-        for (int i = 0; i < 400_000; i++) {
-            initialDecimals.add(StringUtils.replaceOnce(Double.toString(Math.random()), '.', ','));
+        for (int i = 0; i < 8; i++) {
+            invoker.submit((consumer) -> {
+                ThreadLocalRandom random = ThreadLocalRandom.current();
+                for (int j = 0; j < 800_000; j++) {
+                    consumer.accept(StringUtils.replaceOnce(Double.toString(random.nextDouble()), '.', ','));
+                }
+            });
         }
 
-        for (int i = 0; i < 5; i++) {
-            initialDecimals.addAll(initialDecimals);
-        }
+        List<String> initialDecimals = invoker.completeAll();
 
         test.split("Preparation");
 
@@ -108,8 +115,6 @@ public class StringUtilsTest {
         test.split("Commons");
 
         test.finish();
-
-        Object __null = null;
     }
 
     private static class StringLike {
