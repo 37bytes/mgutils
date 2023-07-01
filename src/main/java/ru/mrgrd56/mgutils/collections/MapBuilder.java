@@ -167,7 +167,7 @@ public class MapBuilder<K, V> {
      * Creates a {@link HashMap} instance, populating it with the provided {@code entries}.<br>
      * Null entries are ignored.<br>
      * <br>
-     * Since 1.8.0 the replacement for {@link #fromEntries(Map.Entry[])}.
+     * Since 1.8.0 the replacement for {@code #fromEntries(Map.Entry[])} which was removed in v2.0.0.
      * @since 1.8.0
      */
     @SafeVarargs
@@ -181,7 +181,7 @@ public class MapBuilder<K, V> {
      * It's guaranteed that the {@link Map} object returned by {@link #build()}
      * will have the same reference as the {@code initialMap}.<br>
      * <br>
-     * Since 1.8.0 the replacement for {@link #fromEntries(Map, Map.Entry[])}.
+     * Since 1.8.0 the replacement for {@code #fromEntries(Map, Map.Entry[])} which was removed in v2.0.0.
      * @since 1.8.0
      */
     @SafeVarargs
@@ -193,51 +193,13 @@ public class MapBuilder<K, V> {
      * Creates a {@link Map} instance using the specified {@code mapFactory}, populating the returning {@link Map} with the provided {@code entries}.<br>
      * Null entries are ignored.<br>
      * <br>
-     * Since 1.8.0 the replacement for {@link #fromEntries(Supplier, Map.Entry[])}.
+     * Since 1.8.0 the replacement for {@code #fromEntries(Supplier, Map.Entry[])} which was removed in v2.0.0.
      * @since 1.8.0
      */
     @SafeVarargs
     public static <K, V, M extends Map<K, V>> M create(@NotNull Supplier<M> mapFactory, @Nullable Map.Entry<K, V>... entries) {
         return populateBuilder(new MapBuilder<>(mapFactory), entries).buildAs();
     }
-
-    // region deprecated fromEntries
-    /**
-     * Creates a {@link HashMap} instance, populating it with the provided {@code entries}.<br>
-     * Null entries are ignored.
-     * @deprecated Since 1.8.0 use {@link #create(Map.Entry[])} instead.
-     */
-    @Deprecated
-    @SafeVarargs
-    public static <K, V> Map<K, V> fromEntries(@Nullable Map.Entry<K, V>... entries) {
-        return populateBuilder(new MapBuilder<>(), entries).build();
-    }
-
-    /**
-     * Builds a {@link Map} instance using the specified {@code initialMap}, populating it with the provided {@code entries}.<br>
-     * Null entries are ignored.<br>
-     * It's guaranteed that the {@link Map} object returned by {@link #build()}
-     * will have the same reference as the {@code initialMap}.
-     * @since 1.3.0
-     * @deprecated Since 1.8.0 use {@link #populate(Map, Map.Entry[])} instead.
-     */
-    @Deprecated
-    @SafeVarargs
-    public static <K, V> Map<K, V> fromEntries(Map<K, V> initialMap, @Nullable Map.Entry<K, V>... entries) {
-        return populateBuilder(new MapBuilder<>(initialMap), entries).build();
-    }
-
-    /**
-     * Creates a {@link Map} instance using the specified {@code mapFactory}, populating the returning {@link Map} with the provided {@code entries}.<br>
-     * Null entries are ignored.
-     * @deprecated Since 1.8.0 use {@link #create(Supplier, Map.Entry[])} instead.
-     */
-    @Deprecated
-    @SafeVarargs
-    public static <K, V> Map<K, V> fromEntries(Supplier<Map<K, V>> mapFactory, @Nullable Map.Entry<K, V>... entries) {
-        return populateBuilder(new MapBuilder<>(mapFactory), entries).build();
-    }
-    // endregion
 
     @SafeVarargs
     private static <K, V> MapBuilder<K, V> populateBuilder(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
