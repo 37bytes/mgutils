@@ -11,12 +11,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * //TODO v1.10.0
+ * //TODO v2.1.0
  */
 public class PerformanceTest {
-    private static final String ONE_DEEPNESS_PREFIX = "║ ";
-//    private static final String ONE_DEEPNESS_SPLIT_FIRST_PREFIX = "║";
-//    private static final String ONE_DEEPNESS_SPLIT_PREFIX = " ";
+    private static final String ONE_DEEPNESS_PREFIX = "  ";
 
     private final String name;
     private final Logger logger;
@@ -29,6 +27,7 @@ public class PerformanceTest {
     private final PerformanceTest outerTest;
     private final int deepness;
     private final String deepnessPrefix;
+    private final boolean isSplit;
 
     private PerformanceTest(String name) {
         this(name, NOPLogger.NOP_LOGGER);
@@ -38,11 +37,11 @@ public class PerformanceTest {
         this(name, logger, null, 0, "");
     }
 
-    private PerformanceTest(String name, Logger logger, PerformanceTest outerTest, int deepness, String deepnessPrefix) {
-        this(name, logger, outerTest, deepness, deepnessPrefix, StopWatch.create(), StopWatch.create());
+    protected PerformanceTest(String name, Logger logger, PerformanceTest outerTest, int deepness, String deepnessPrefix) {
+        this(name, logger, outerTest, deepness, deepnessPrefix, StopWatch.create(), StopWatch.create(), false);
     }
 
-    private PerformanceTest(String name, Logger logger, PerformanceTest outerTest, int deepness, String deepnessPrefix, StopWatch stopWatch, StopWatch splitStopWatch) {
+    protected PerformanceTest(String name, Logger logger, PerformanceTest outerTest, int deepness, String deepnessPrefix, StopWatch stopWatch, StopWatch splitStopWatch, boolean isSplit) {
         this.name = name;
         this.logger = logger;
         this.outerTest = outerTest;
@@ -50,6 +49,7 @@ public class PerformanceTest {
         this.deepnessPrefix = deepnessPrefix;
         this.stopWatch = stopWatch;
         this.splitStopWatch = splitStopWatch;
+        this.isSplit = isSplit;
     }
 
     public static PerformanceTest create(String name) {
@@ -60,7 +60,19 @@ public class PerformanceTest {
         return new PerformanceTest(name, logger);
     }
 
+    public static PerformanceTest createStarted(String name) {
+        return create(name).start();
+    }
+
+    public static PerformanceTest createStarted(String name, Logger logger) {
+        return create(name, logger).start();
+    }
+
     public PerformanceTest nested(String name) {
+        if (isSplit) {
+            throw new UnsupportedOperationException("Creating nested tests for a split is not allowed");
+        }
+
         PerformanceTest nestedTest = new PerformanceTest(
                 name,
                 logger,
@@ -72,7 +84,15 @@ public class PerformanceTest {
         return nestedTest;
     }
 
+    public PerformanceTest nestedStarted(String name) {
+        return nested(name).start();
+    }
+
     public PerformanceTest split(String name) {
+        if (isSplit) {
+            throw new UnsupportedOperationException("Splitting a split is not allowed");
+        }
+
         PerformanceTest nestedTest = new PerformanceTest(
                 name,
                 logger,
@@ -80,7 +100,8 @@ public class PerformanceTest {
                 deepness + 1,
                 deepnessPrefix + ONE_DEEPNESS_PREFIX,
                 null,
-                null);
+                null,
+                true);
 
         nestedTest.operationTime = splitStopWatch.getTime();
         nestedTest.state = State.FINISHED;
@@ -121,6 +142,10 @@ public class PerformanceTest {
         return outerTest;
     }
 
+    public boolean isFinished() {
+        return state == State.FINISHED;
+    }
+
     public long getOperationTime() {
         if (state != State.FINISHED) {
             throw new IllegalStateException("The test has not been finished yet");
@@ -133,28 +158,34 @@ public class PerformanceTest {
         return DurationFormatUtils.formatDurationHMS(getOperationTime());
     }
 
+    public String getName() {
+        return name;
+    }
+
     protected void logStart() {
-        if (deepness == 0) {
-            logger.debug("{}╔═══╣{}", deepnessPrefix, name);
-        } else {
-            logger.debug("{}╔═╣{}", deepnessPrefix, name);
-        }
+        logger.debug("{}{}  started", getDeepnessPrefix(), getName());
     }
 
     protected void logFinish() {
-        if (deepness == 0) {
-            logger.debug("{}╚═══╣{} ══ {}", deepnessPrefix, name, formatOperationTime());
-        } else {
-            logger.debug("{}╚═╣{} ══ {}", deepnessPrefix, name, formatOperationTime());
-        }
+        logger.debug("{}{}  {}", getDeepnessPrefix(), getName(), formatOperationTime());
     }
 
     protected void logSplit() {
-        if (deepness <= 1) {
-            logger.debug("{}  │{} ── {}", deepnessPrefix, name, formatOperationTime());
-        } else {
-            logger.debug("{}│{} ── {}", deepnessPrefix, name, formatOperationTime());
-        }
+        logger.debug("{}{}  {}", getDeepnessPrefix(), getName(), formatOperationTime());
+    }
+
+    protected boolean isSplit() {
+        return isSplit;
+    }
+
+    protected String getDeepnessPrefix() {
+        return deepnessPrefix;
+    }
+
+    protected enum State {
+        CREATED,
+        STARTED,
+        FINISHED
     }
 
     private void stop() {
@@ -171,11 +202,5 @@ public class PerformanceTest {
 
         stopWatch.stop();
         operationTime = stopWatch.getTime();
-    }
-
-    private enum State {
-        CREATED,
-        STARTED,
-        FINISHED
     }
 }

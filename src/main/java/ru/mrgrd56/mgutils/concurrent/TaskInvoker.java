@@ -1,6 +1,11 @@
 package ru.mrgrd56.mgutils.concurrent;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import ru.mrgrd56.mgutils.delegate.CollectionConsumer;
+import ru.mrgrd56.mgutils.delegate.ExceptionalConsumer;
 import ru.mrgrd56.mgutils.delegate.ExceptionalRunnable;
+import ru.mrgrd56.mgutils.delegate.MultiConsumer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,14 +13,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Used for executing a specific set of tasks, distributing them among threads using {@link ExecutorService}.<br><br>
  * Main methods:<br>
  * <ul>
- *     <li>{@link #submit(ExceptionalRunnable)} - accepts a task. The task <u>does not</u> start executing;</li>
- *     <li>{@link #completeAll()} - executes all accepted tasks using {@link #invokeAll}, waits for their completion, and returns the results.</li>
+ *     <li>{@link #submit(ExceptionalRunnable)} - accepts a task. The task <em>does not</em> start executing;</li>
+ *     <li>{@link #completeAll()} - executes all accepted tasks using {@link #invokeAllTasks}, waits for their completion, and returns the results.</li>
  * </ul>
  *
  * @param <T> The type of value returned by the executed tasks.
@@ -30,23 +37,49 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Accepts a task by adding it to the list for execution. The task <u>does not</u> start executing.
+     * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
+     * The task accepted returns a single value which will be added to the output list.
      */
     public void submit(Callable<T> task) {
-        tasks.add(new InvokerCallable<>(task));
+        tasks.add(InvokerCallable.ofCallable(task));
     }
 
     /**
-     * Accepts a task with no return value, adding it to the list for execution. The task <u>does not</u> start executing.
+     * Accepts a task with no return value, adding it to the list for execution. The task <em>does not</em> start executing.<br>
+     * No values will be added to the output list.
      *
      * <br><br><p>
-     * Since v1.6.0 it takes {@link ExceptionalRunnable} instead of regular {@link Runnable}.
+     * Since v1.6.0 it takes {@link ExceptionalRunnable} instead of regular {@link Runnable}.<br>
+     * Since v2.0.0 the {@code null} are not added to the output list.
      */
     public void submit(ExceptionalRunnable task) {
-        submit(() -> {
-            task.run();
-            return null;
-        });
+        tasks.add(InvokerCallable.ofRunnable(task));
+    }
+
+    /**
+     * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
+     * The values that are passed to the {@code consumer} will be added to the output list.<br>
+     * These values are firstly collected to the newly created <i>synchronized</i> {@link ArrayList}.
+     * @since 2.0.0
+     */
+    public void submit(ExceptionalConsumer<MultiConsumer<T>> task) {
+        submit(task, () -> Collections.synchronizedList(new ArrayList<>()));
+    }
+
+    /**
+     * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
+     * The values that are passed to the {@code consumer} will be added to the output list.<br>
+     * These values are firstly collected to the {@link List} newly created from the provided {@code listFactory}.
+     * @param listFactory The factory used to create a {@link List} to which the accepted values will be collected.
+     * @since 2.0.0
+     */
+    public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Supplier<List<T>> listFactory) {
+        tasks.add(new InvokerCallable<>(() -> {
+            List<T> appliedValues = listFactory.get();
+            MultiConsumer<T> valueConsumer = new CollectionConsumer<>(appliedValues);
+            task.accept(valueConsumer);
+            return new TaskValue.Multi<>(appliedValues);
+        }));
     }
 
     /**
@@ -55,66 +88,56 @@ public class TaskInvoker<T> {
      * @see #submit(Callable)
      */
     public void submitAll(Collection<Callable<T>> tasks) {
-        this.tasks.addAll(tasks.stream().map(InvokerCallable::new).collect(Collectors.toList()));
+        List<InvokerCallable<T>> invokerCallables = tasks.stream()
+                .map(InvokerCallable::ofCallable)
+                .collect(Collectors.toList());
+
+        this.tasks.addAll(invokerCallables);
     }
 
     /**
-     * Accepts tasks with no return value, adding them to the list for execution. The tasks <u>do not</u> start executing.
+     * Accepts tasks with no return value, adding them to the list for execution. The tasks <u>do not</u> start executing.<br>
+     * No values will be added to the output list.
      *
      * <br><br><p>
      * Since v1.6.0 it takes a list of {@link ExceptionalRunnable}s instead of regular {@link Runnable}s.
+     * <br>
+     * Since v2.0.0 the {@code null}s are not added to the output list.
      *
      * @see #submit(ExceptionalRunnable)
      * @see #submitAll(Collection)
      */
     public void submitAllVoid(Collection<ExceptionalRunnable> tasks) {
-        List<Callable<T>> voidTasks = tasks.stream()
-                .map(task -> {
-                    return (Callable<T>) () -> {
-                        task.run();
-                        return null;
-                    };
-                })
+        List<InvokerCallable<T>> invokerCallables = tasks.stream()
+                .map(InvokerCallable::<T>ofRunnable)
                 .collect(Collectors.toList());
 
-        submitAll(voidTasks);
+        this.tasks.addAll(invokerCallables);
     }
 
     /**
-     * Executes all accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.
+     * Executes all the accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.<br>
+     * <br>
+     * Since v2.0.0 returns {@code List<Future<TaskValue<T>>>} instead of {@code List<Future<T>>}.
+     * @deprecated Since v2.0.0 it's highly recommended to use {@link #completeAll()} instead.
      */
-    public List<Future<T>> invokeAll() {
-        if (tasks.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        try {
-            return executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            tasks.clear();
-        }
+    @Deprecated
+    public List<Future<TaskValue<T>>> invokeAll() {
+        return invokeAllTasks();
     }
 
     /**
      * Executes all accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.<br>
-     * Uses the provided timeout.
+     * Uses the provided timeout.<br>
+     * <br>
+     * Since v2.0.0 returns {@code List<Future<TaskValue<T>>>} instead of {@code List<Future<T>>}.
      *
      * @since 1.6.0
+     * @deprecated Since v2.0.0 it's highly recommended to use {@link #completeAll(long, TimeUnit)} instead.
      */
-    public List<Future<T>> invokeAll(long timeout, TimeUnit unit) {
-        if (tasks.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        try {
-            return executor.invokeAll(tasks, timeout, unit);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            tasks.clear();
-        }
+    @Deprecated
+    public List<Future<TaskValue<T>>> invokeAll(long timeout, TimeUnit unit) {
+        return invokeAllTasks(timeout, unit);
     }
 
     /**
@@ -129,7 +152,7 @@ public class TaskInvoker<T> {
             return Collections.emptyList();
         }
 
-        return completeFutures(invokeAll());
+        return completeFutures(invokeAllTasks());
     }
 
     /**
@@ -148,7 +171,7 @@ public class TaskInvoker<T> {
             return Collections.emptyList();
         }
 
-        return completeFutures(invokeAll(timeout, unit));
+        return completeFutures(invokeAllTasks(timeout, unit));
     }
 
     /**
@@ -174,6 +197,43 @@ public class TaskInvoker<T> {
         }
     }
 
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .appendSuper(super.toString())
+                .append("tasks", tasks.size())
+                .append("executor", executor)
+                .toString();
+    }
+
+    private List<Future<TaskValue<T>>> invokeAllTasks() {
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            tasks.clear();
+        }
+    }
+
+    private List<Future<TaskValue<T>>> invokeAllTasks(long timeout, TimeUnit unit) {
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return executor.invokeAll(tasks, timeout, unit);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            tasks.clear();
+        }
+    }
+
     private static <T> T getFutureResult(Future<T> future) throws CancellationException {
         try {
             return future.get();
@@ -186,23 +246,42 @@ public class TaskInvoker<T> {
         }
     }
 
-    private static <T> List<T> completeFutures(List<Future<T>> futures) {
+    private static <T> List<T> completeFutures(List<Future<TaskValue<T>>> futures) {
         return futures.stream()
                 .map(TaskInvoker::getFutureResult)
+                .filter(taskValue -> !taskValue.isVoid())
+                .flatMap(taskValue -> {
+                    if (taskValue.isSingle()) {
+                        return Stream.of(taskValue.asSingle().getValue());
+                    }
+                    if (taskValue.isMulti()) {
+                        return taskValue.asMulti().getValues().stream();
+                    }
+
+                    throw new IllegalStateException("taskValue is an instance of an unsupported class: " + taskValue.getClass().getName());
+                })
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public String toString() {
-        return String.format("TaskInvoker tasks: %s, executor: %s", tasks.size(), executor.toString());
-    }
-
-    private static class InvokerCallable<T> implements Callable<T> {
-        private final Callable<T> callable;
+    private static class InvokerCallable<T> implements Callable<TaskValue<T>> {
+        private final Callable<TaskValue<T>> callable;
         private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 
-        public InvokerCallable(Callable<T> callable) {
+        private InvokerCallable(Callable<TaskValue<T>> callable) {
             this.callable = callable;
+        }
+
+        public static <T> InvokerCallable<T> ofCallable(Callable<T> callable) {
+            return new InvokerCallable<>(() -> {
+                return new TaskValue.Single<>(callable.call());
+            });
+        }
+
+        public static <T> InvokerCallable<T> ofRunnable(ExceptionalRunnable runnable) {
+            return new InvokerCallable<>(() -> {
+                runnable.run();
+                return TaskValue.Void.getInstance();
+            });
         }
 
         public void cancel() {
@@ -210,12 +289,95 @@ public class TaskInvoker<T> {
         }
 
         @Override
-        public T call() throws Exception {
+        public TaskValue<T> call() throws Exception {
             if (isCancelled.get()) {
                 throw new CancellationException("The task has been cancelled");
             }
 
             return callable.call();
+        }
+    }
+
+    public interface TaskValue<T> {
+        default boolean isVoid() {
+            return false;
+        }
+
+        default boolean isSingle() {
+            return false;
+        }
+
+        default boolean isMulti() {
+            return false;
+        }
+
+        default Single<T> asSingle() throws UnsupportedOperationException {
+            throw new UnsupportedOperationException();
+        }
+
+        default Multi<T> asMulti() throws UnsupportedOperationException {
+            throw new UnsupportedOperationException();
+        }
+
+        class Void<T> implements TaskValue<T> {
+            private Void() { }
+
+            @SuppressWarnings("rawtypes")
+            private static final Lazy<Void> instance = new Lazy<>(Void::new);
+
+            @SuppressWarnings("unchecked")
+            private static <T> Void<T> getInstance() {
+                return instance.get();
+            }
+
+            @Override
+            public boolean isVoid() {
+                return true;
+            }
+        }
+
+        class Single<T> implements TaskValue<T> {
+            private final T value;
+
+            private Single(T value) {
+                this.value = value;
+            }
+
+            public T getValue() {
+                return value;
+            }
+
+            @Override
+            public boolean isSingle() {
+                return true;
+            }
+
+            @Override
+            public Single<T> asSingle() {
+                return this;
+            }
+        }
+
+        class Multi<T> implements TaskValue<T> {
+            private final List<T> values;
+
+            private Multi(List<T> values) {
+                this.values = values;
+            }
+
+            public List<T> getValues() {
+                return values;
+            }
+
+            @Override
+            public boolean isMulti() {
+                return true;
+            }
+
+            @Override
+            public Multi<T> asMulti() {
+                return this;
+            }
         }
     }
 }

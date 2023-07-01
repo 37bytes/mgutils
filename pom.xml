@@ -6,7 +6,7 @@
 
     <groupId>ru.mrgrd56</groupId>
     <artifactId>mgutils</artifactId>
-    <version>1.9.0</version>
+    <version>2.0.0</version>
 
     <name>MG Utils</name>
     <description>Common Java Utils</description>
