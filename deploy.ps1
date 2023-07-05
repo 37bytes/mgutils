@@ -41,8 +41,7 @@ if ([string]::IsNullOrEmpty($existedInRemote)) {
     git checkout repository
 }
 
-# Use version 2.5.2 specifically, as later versions do not generate checksums (removed in versions 3.0.0+)
-mvn -f "../pom.xml" "install:2.5.2:install-file" -DgroupId=$groupId -DartifactId=$artifactId -Dversion=$version -Dfile=$jarLocation -Dpackaging=jar -DgeneratePom=$true "-DlocalRepositoryPath=." -DcreateChecksum=$true
+mvn -f "../pom.xml" "install:install-file" -DgroupId=$groupId -DartifactId=$artifactId -Dversion=$version -Dfile=$jarLocation -Dpackaging=jar -DgeneratePom=$true "-DlocalRepositoryPath=." -DcreateChecksum=$true
 
 # Commit and push
 Write-Host "Committing and pushing to repository branch..."

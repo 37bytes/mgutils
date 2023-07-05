@@ -119,6 +119,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--Use version 2.5.2 specifically, as later versions do not generate checksums (removed in versions 3.0.0+)-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
