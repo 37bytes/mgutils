@@ -52,6 +52,40 @@ public class TaskInvokerTest {
     }
 
     @Test
+    public void testTaskInvokerTimeout() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        TaskInvoker<Integer> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 10; i++) {
+            int finalI = i;
+            invoker.submit(() -> {
+                Thread.sleep(500);
+                return finalI;
+            });
+        }
+
+        Assertions.assertThrows(CancellationException.class, () -> {
+            invoker.completeAll(1500, TimeUnit.MILLISECONDS);
+        });
+    }
+
+    @Test
+    public void testTaskInvokerTimeoutVoid() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        TaskInvoker<Void> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 10; i++) {
+            invoker.submit(() -> {
+                Thread.sleep(500);
+            });
+        }
+
+        Assertions.assertThrows(CancellationException.class, () -> {
+            invoker.completeAllVoid(1500, TimeUnit.MILLISECONDS);
+        });
+    }
+
+    @Test
     public void testTaskInvokerNull() {
         ExecutorService executor = Executors.newFixedThreadPool(50);
         TaskInvoker<String> invoker = new TaskInvoker<>(executor);
@@ -67,6 +101,7 @@ public class TaskInvokerTest {
         List<String> results = invoker.completeAll();
 
         Assertions.assertEquals(60, results.size());
+        Assertions.assertNull(results.get(12));
     }
 
     @Test
@@ -113,7 +148,7 @@ public class TaskInvokerTest {
         }
 
         try {
-            invoker.completeAll();
+            invoker.completeAllVoid();
             Assertions.fail("Cancellation exception was not thrown");
         } catch (CancellationException e) {
             log.info("[success] A cancellation exception was thrown: {} {}", e.getClass().getName(), e.getMessage());
