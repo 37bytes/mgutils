@@ -3,10 +3,8 @@ package ru.mrgrd56.mgutils.collections;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -17,14 +15,12 @@ import java.util.function.Supplier;
  * @param <V> The type of the value.
  * @since 1.0
  */
-public class MapBuilder<K, V> {
-    private final Map<K, V> map;
-
+public class MapBuilder<K, V> extends AbstractMapBuilder<K, V, MapBuilder<K, V>> {
     /**
      * Creates an instance of {@link MapBuilder} using the {@link HashMap} implementation.
      */
     public MapBuilder() {
-        this(HashMap::new);
+        super();
     }
 
     /**
@@ -33,8 +29,7 @@ public class MapBuilder<K, V> {
      * @param mapFactory The object that creates a {@link Map} instance.
      */
     public MapBuilder(@NotNull Supplier<? extends Map<K, V>> mapFactory) {
-        Objects.requireNonNull(mapFactory);
-        this.map = Objects.requireNonNull(mapFactory.get());
+        super(mapFactory);
     }
 
     /**
@@ -44,83 +39,7 @@ public class MapBuilder<K, V> {
      * @since 1.3.0
      */
     public MapBuilder(@NotNull Map<K, V> initialMap) {
-        Objects.requireNonNull(initialMap);
-        this.map = initialMap;
-    }
-
-    /**
-     * Inserts an entry into the created {@link Map}, using the provided {@code key} and {@code value}.
-     * @param key The key associated with the value.
-     * @param value The value.
-     */
-    public MapBuilder<K, V> put(@Nullable K key, @Nullable V value) {
-        map.put(key, value);
-        return this;
-    }
-
-    /**
-     * Inserts an entry into the created {@link Map}, using the provided {@code entry}.
-     * @param entry The entry to be added to the created {@link Map}.
-     */
-    public MapBuilder<K, V> put(@NotNull Map.Entry<K, V> entry) {
-        return put(entry.getKey(), entry.getValue());
-    }
-
-    /**
-     * Inserts all of the mappings from the specified map into the created {@link Map}.<br>
-     * The used map must support the {@link Map#putAll} method.
-     *
-     * @param map mappings to be stored in the created {@link Map}; must not be null.
-     * @throws NullPointerException if the specified map is null.
-     * @since 1.8.0
-     */
-    public MapBuilder<K, V> putAll(@NotNull Map<? extends K, ? extends V> map) {
-        this.map.putAll(map);
-        return this;
-    }
-
-    /**
-     * If the {@code condition} equals to {@code true}, inserts an entry into the created {@link Map}, using the provided {@code key} and {@code value}.
-     * @param condition Condition indicating whether the entry will be retrieved from the {@code entrySupplier} and added to the {@link Map}.
-     * @param key The key associated with the value.
-     * @param value The value.
-     * @since 1.3.0
-     */
-    public MapBuilder<K, V> putIf(boolean condition, @Nullable K key, @Nullable V value) {
-        if (condition) {
-            put(key, value);
-        }
-
-        return this;
-    }
-
-    /**
-     * If the {@code condition} equals to {@code true}, inserts the {@code entry} into the created {@link Map}.
-     * @param condition Condition indicating whether the entry will be retrieved from the {@code entrySupplier} and added to the {@link Map}.
-     * @param entry The entry to be added to the created {@link Map}.
-     * @since 1.3.0
-     */
-    public MapBuilder<K, V> putIf(boolean condition, @NotNull Map.Entry<K, V> entry) {
-        if (condition) {
-            put(entry);
-        }
-
-        return this;
-    }
-
-    /**
-     * If the {@code condition} equals to {@code true}, inserts an entry
-     * into the created {@link Map}, getting the entry from the provided {@code entrySupplier}.
-     * @param condition Condition indicating whether the entry will be retrieved from the {@code entrySupplier} and added to the {@link Map}.
-     * @param entrySupplier Function returning the entry to be added to the created {@link Map}.
-     * @since 1.3.0
-     */
-    public MapBuilder<K, V> putIf(boolean condition, @NotNull Supplier<Map.Entry<K, V>> entrySupplier) {
-        if (condition) {
-            put(entrySupplier.get());
-        }
-
-        return this;
+        super(initialMap);
     }
 
     /**
@@ -128,6 +47,7 @@ public class MapBuilder<K, V> {
      * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.<br>
      * The returned {@link Map} has the same reference as the {@code initialMap} if passed.
      */
+    @Override
     public Map<K, V> build() {
         return map;
     }
@@ -143,24 +63,6 @@ public class MapBuilder<K, V> {
     @SuppressWarnings("unchecked")
     public <M extends Map<K, V>> M buildAs() throws ClassCastException {
         return (M) map;
-    }
-
-    /**
-     * Returns the created {@link Map} instance, the implementation depends on the {@code mapFactory}
-     * passed to the {@link MapBuilder#MapBuilder(Supplier)} constructor.<br>
-     * The returned {@link Map} has a different reference from the {@code initialMap} if passed.
-     * @since 1.9.0
-     */
-    public Map<K, V> buildUnmodifiable() {
-        return Collections.unmodifiableMap(build());
-    }
-
-    /**
-     * Creates an {@link Entry} instance. Supports {@code null} key and value.
-     */
-    @NotNull
-    public static <K, V> Map.Entry<K, V> entry(@Nullable K key, @Nullable V value) {
-        return new Entry<>(key, value);
     }
 
     /**
@@ -199,48 +101,5 @@ public class MapBuilder<K, V> {
     @SafeVarargs
     public static <K, V, M extends Map<K, V>> M create(@NotNull Supplier<M> mapFactory, @Nullable Map.Entry<K, V>... entries) {
         return populateBuilder(new MapBuilder<>(mapFactory), entries).buildAs();
-    }
-
-    @SafeVarargs
-    private static <K, V> MapBuilder<K, V> populateBuilder(MapBuilder<K, V> builder, @Nullable Map.Entry<K, V>... entries) {
-        Objects.requireNonNull(entries, "entries array must not be null itself");
-
-        for (Map.Entry<K, V> entry : entries) {
-            if (entry != null) {
-                builder.put(entry);
-            }
-        }
-
-        return builder;
-    }
-
-    /**
-     * {@link Map} entry used for creating {@link Map} using {@link MapBuilder}.
-     */
-    private static class Entry<K, V> implements Map.Entry<K, V> {
-        private final K key;
-        private V value;
-
-        private Entry(K key, V value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public K getKey() {
-            return key;
-        }
-
-        @Override
-        public V getValue() {
-            return value;
-        }
-
-        @Override
-        public V setValue(V value) {
-            V oldValue = this.value;
-            this.value = value;
-            return oldValue;
-        }
     }
 }

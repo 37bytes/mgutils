@@ -47,7 +47,7 @@ public class LazyTest {
             });
         }
 
-        invoker.completeAll();
+        invoker.completeAllVoid();
 
         Assertions.assertEquals(VALID_STRING, lazy.get());
         Assertions.assertEquals(1, timesInitialized.get());

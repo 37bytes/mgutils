@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import ru.mrgrd56.mgutils.StringUtils;
 import ru.mrgrd56.mgutils._SUSPENDED_.performance.PerformanceTest;
 import ru.mrgrd56.mgutils.concurrent.TaskInvoker;
+import ru.mrgrd56.mgutils.logging.ScopedLogger;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -18,10 +19,12 @@ public class PerformanceTestTest {
 
     @Test
     public void testPerformanceTest() {
+        Logger logger = ScopedLogger.of(log, "tpt:");
+
         ExecutorService executor = Executors.newFixedThreadPool(8);
         TaskInvoker<String> invoker = new TaskInvoker<>(executor);
 
-        PerformanceTest test = PerformanceTest.create("ReplaceOnce", log).start();
+        PerformanceTest test = PerformanceTest.create("ReplaceOnce", logger).start();
 
         for (int i = 0; i < 8; i++) {
             invoker.submit((consumer) -> {
