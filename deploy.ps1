@@ -35,7 +35,7 @@ Set-Location $repoDir
 $existedInRemote = git ls-remote --heads origin repository
 
 if ([string]::IsNullOrEmpty($existedInRemote)) {
-    git checkout -B repository
+    git checkout --orphan repository
 } else {
     git fetch origin repository
     git checkout repository
