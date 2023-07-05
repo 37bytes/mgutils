@@ -41,7 +41,7 @@ if ([string]::IsNullOrEmpty($existedInRemote)) {
     git checkout repository
 }
 
-mvn -f "../pom.xml" "install:install-file" -DgroupId=$groupId -DartifactId=$artifactId -Dversion=$version -Dfile=$jarLocation -Dpackaging=jar -DgeneratePom=$true "-DlocalRepositoryPath=." -DcreateChecksum=$true
+mvn -f "../pom.xml" "install:install-file" "-DgroupId=$groupId" "-DartifactId=$artifactId" "-Dversion=$version" "-Dfile=$jarLocation" "-Dpackaging=jar" "-DgeneratePom=$true" "-DlocalRepositoryPath=." "-DcreateChecksum=$true"
 
 # Commit and push
 Write-Host "Committing and pushing to repository branch..."
