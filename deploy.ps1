@@ -20,6 +20,7 @@ $targetDir = Join-Path $baseDir 'target'
 $baseDirName = Split-Path $baseDir -Leaf
 
 $repoDir = Join-Path $baseDir "${baseDirName}-repository"
+$pomFile = Join-Path $baseDir 'pom.xml'
 
 # Copy git folder if the directory didn't exist yet
 if (!(Test-Path $repoDir)) {
@@ -41,7 +42,7 @@ if ([string]::IsNullOrEmpty($existedInRemote)) {
     git checkout repository
 }
 
-mvn -f "../pom.xml" "install:install-file" "-DgroupId=$groupId" "-DartifactId=$artifactId" "-Dversion=$version" "-Dfile=$jarLocation" "-Dpackaging=jar" "-DgeneratePom=$true" "-DlocalRepositoryPath=." "-DcreateChecksum=$true"
+mvn -f "../pom.xml" "install:install-file" "-DgroupId=$groupId" "-DartifactId=$artifactId" "-Dversion=$version" "-Dfile=$jarLocation" "-Dpackaging=jar" "-DpomFile=$pomFile" "-DlocalRepositoryPath=$repoDir" "-DcreateChecksum=$true"
 
 # Commit and push
 Write-Host "Committing and pushing to repository branch..."
