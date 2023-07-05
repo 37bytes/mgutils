@@ -50,7 +50,7 @@ public class TaskInvoker<T> {
      *
      * <br><br><p>
      * Since v1.6.0 it takes {@link ExceptionalRunnable} instead of regular {@link Runnable}.<br>
-     * Since v2.0.0 the {@code null} are not added to the output list.
+     * Since v2.0.0 {@code null} is not added to the output list.
      */
     public void submit(ExceptionalRunnable task) {
         tasks.add(InvokerCallable.ofRunnable(task));
@@ -59,7 +59,11 @@ public class TaskInvoker<T> {
     /**
      * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
      * The values that are passed to the {@code consumer} will be added to the output list.<br>
-     * These values are firstly collected to the newly created <i>synchronized</i> {@link ArrayList}.
+     * These values are firstly collected to the newly created <i>synchronized</i> {@link ArrayList}.<br>
+     * <br>
+     * It's recommended to use this method only if you need to add multiple values by one task,
+     * otherwise consider using {@link #submit(Callable)} instead.
+     *
      * @since 2.0.0
      */
     public void submit(ExceptionalConsumer<MultiConsumer<T>> task) {
@@ -70,7 +74,11 @@ public class TaskInvoker<T> {
      * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
      * The values that are passed to the {@code consumer} will be added to the output list.<br>
      * These values are firstly collected to the {@link List} newly created from the provided {@code listFactory}.
-     * @param listFactory The factory used to create a {@link List} to which the accepted values will be collected.
+     *
+     * @param listFactory The factory used to create a {@link List} to which the accepted values will be collected.<br>
+     *                    <br>
+     *                    It's recommended to use this method only if you need to add multiple values by one task,
+     *                    otherwise consider using {@link #submit(Callable)} instead.
      * @since 2.0.0
      */
     public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Supplier<List<T>> listFactory) {
@@ -102,7 +110,7 @@ public class TaskInvoker<T> {
      * <br><br><p>
      * Since v1.6.0 it takes a list of {@link ExceptionalRunnable}s instead of regular {@link Runnable}s.
      * <br>
-     * Since v2.0.0 the {@code null}s are not added to the output list.
+     * Since v2.0.0 {@code null}s are not added to the output list.
      *
      * @see #submit(ExceptionalRunnable)
      * @see #submitAll(Collection)
@@ -116,36 +124,10 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Executes all the accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.<br>
-     * <br>
-     * Since v2.0.0 returns {@code List<Future<TaskValue<T>>>} instead of {@code List<Future<T>>}.
-     * @deprecated Since v2.0.0 it's highly recommended to use {@link #completeAll()} instead.
-     */
-    @Deprecated
-    public List<Future<TaskValue<T>>> invokeAll() {
-        return invokeAllTasks();
-    }
-
-    /**
-     * Executes all accepted tasks using {@link ExecutorService#invokeAll}. The list of accepted tasks is cleared.<br>
-     * Uses the provided timeout.<br>
-     * <br>
-     * Since v2.0.0 returns {@code List<Future<TaskValue<T>>>} instead of {@code List<Future<T>>}.
+     * Executes all still uncompleted tasks using {@link #invokeAllTasks()}, waits for their completion, and returns the results.<br>
+     * Calling this method clears the list of accepted tasks.
      *
-     * @since 1.6.0
-     * @deprecated Since v2.0.0 it's highly recommended to use {@link #completeAll(long, TimeUnit)} instead.
-     */
-    @Deprecated
-    public List<Future<TaskValue<T>>> invokeAll(long timeout, TimeUnit unit) {
-        return invokeAllTasks(timeout, unit);
-    }
-
-    /**
-     * Executes all still uncompleted tasks using {@link #invokeAll}, waits for their completion, and returns the results.<br>
-     * The list of accepted tasks is cleared.
-     *
-     * @throws CancellationException
-     *         May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
      */
     public List<T> completeAll() throws CancellationException {
         if (tasks.isEmpty()) {
@@ -156,14 +138,12 @@ public class TaskInvoker<T> {
     }
 
     /**
-     * Executes all still uncompleted tasks using {@link #invokeAll}, waits for their completion, and returns the results.<br>
-     * The list of accepted tasks is cleared.<br>
+     * Executes all still uncompleted tasks using {@link #invokeAllTasks()}, waits for their completion, and returns the results.<br>
+     * Calling this method clears the list of accepted tasks.<br>
      * Uses the provided timeout.
      *
-     * @throws CancellationException
-     *         May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.<br>
-     *         It is also thrown if the timeout has been exceeded.
-     *
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.<br>
+     *                               It is also thrown if the timeout has been exceeded.
      * @since 1.6.0
      */
     public List<T> completeAll(long timeout, TimeUnit unit) throws CancellationException {
@@ -172,6 +152,31 @@ public class TaskInvoker<T> {
         }
 
         return completeFutures(invokeAllTasks(timeout, unit));
+    }
+
+    /**
+     * Executes all still uncompleted tasks using {@link #invokeAllTasks()}, waits for their completion, and returns the results.<br>
+     * Calling this method clears the list of accepted tasks, which means that the results can't be obtained afterward.<br>
+     *
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
+     *
+     * @since 3.0.0
+     */
+    public void completeAllVoid() throws CancellationException {
+        completeFuturesVoid(invokeAllTasks());
+    }
+
+    /**
+     * Executes all still uncompleted tasks using {@link #invokeAllTasks()} and waits for their completion.<br>
+     * Calling this method clears the list of accepted tasks, which means that the results can't be obtained afterward.<br>
+     * Uses the provided timeout.
+     *
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.<br>
+     *                               It is also thrown if the timeout has been exceeded.
+     * @since 3.0.0
+     */
+    public void completeAllVoid(long timeout, TimeUnit unit) throws CancellationException {
+        completeFuturesVoid(invokeAllTasks(timeout, unit));
     }
 
     /**
@@ -200,7 +205,6 @@ public class TaskInvoker<T> {
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .appendSuper(super.toString())
                 .append("tasks", tasks.size())
                 .append("executor", executor)
                 .toString();
@@ -258,9 +262,14 @@ public class TaskInvoker<T> {
                         return taskValue.asMulti().getValues().stream();
                     }
 
-                    throw new IllegalStateException("taskValue is an instance of an unsupported class: " + taskValue.getClass().getName());
+                    throw new IllegalStateException(
+                            "taskValue is an instance of an unsupported class: " + taskValue.getClass().getName());
                 })
                 .collect(Collectors.toList());
+    }
+
+    private static <T> void completeFuturesVoid(List<Future<TaskValue<T>>> futures) {
+        futures.forEach(TaskInvoker::getFutureResult);
     }
 
     private static class InvokerCallable<T> implements Callable<TaskValue<T>> {
@@ -298,7 +307,7 @@ public class TaskInvoker<T> {
         }
     }
 
-    public interface TaskValue<T> {
+    private interface TaskValue<T> {
         default boolean isVoid() {
             return false;
         }
