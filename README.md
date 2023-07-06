@@ -1,6 +1,6 @@
 # mgutils - Common Java Utils
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.mrgrd56/mgutils/badge.svg)](https://central.sonatype.com/artifact/ru.mrgrd56/mgutils)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.b37.libs/mgutils/badge.svg)](https://central.sonatype.com/artifact/dev.b37.libs/mgutils)
 
 > **Note**  
 > The version displayed here may be outdated, click on the badge to view the latest version
@@ -17,11 +17,11 @@ The library requires Java 8 or above.
 
 ### Installation
 
-1. Go to the [Maven Central page](https://central.sonatype.com/artifact/ru.mrgrd56/mgutils) of this library.
+1. Go to the [Maven Central page](https://central.sonatype.com/artifact/dev.b37.libs/mgutils) of this library.
 2. Copy the snippet for your package manager. E.g. for Maven you can copy code looking like this:
 ```xml
 <dependency>
-    <groupId>ru.mrgrd56</groupId>
+    <groupId>dev.b37.libs</groupId>
     <artifactId>mgutils</artifactId>
     <version>CURRENT_VERSION_HERE</version>
 </dependency>
@@ -39,7 +39,7 @@ Let's see the most useful classes in this library.
 
 ### ScopedLogger
 
-[_dev.b37.libs.mgutils.logging.ScopedLogger_](https://github.com/37bytes/mgutils/blob/master/src/main/java/dev/b37/mgutils/logging/ScopedLogger.java)
+[_dev.b37.mgutils.logging.ScopedLogger_](https://github.com/37bytes/mgutils/blob/master/src/main/java/dev/b37/mgutils/logging/ScopedLogger.java)
 
 **Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!**
 
