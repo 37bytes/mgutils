@@ -41,7 +41,7 @@ Let's see the most useful classes in this library.
 
 [_dev.b37.mgutils.logging.ScopedLogger_](https://github.com/37bytes/mgutils/blob/master/src/main/java/dev/b37/mgutils/logging/ScopedLogger.java)
 
-**Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!**
+**Tired of digging through messy logs to make sense of your application’s behavior? ScopedLogger is here to neatly organize your logs and give them the clarity they need!** _(с) ChatGPT_
 
 `ScopedLogger` is a class that augments traditional logging by adding scope to logging operations. This functionality helps group related log messages together by attaching a `scope name` and a unique `scope ID` to each log message. This is particularly useful when tracking the flow of control in the logs, especially in cases where there are nested scopes.
 
