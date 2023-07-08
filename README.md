@@ -28,6 +28,24 @@ The library requires Java 8 or above.
 ```
 3. Paste this fragment into your dependency list. In case of Maven, it's the `<dependencies>` section in `pom.xml`.
 
+## Publishing New Version
+
+### Using GitHub Actions **(recommended)**
+
+1. Create a new release on this repository. The new version will be published automatically.
+2. You can check out the [`Actions`](https://github.com/37bytes/mgutils/actions) tab to ensure.
+
+&nbsp;&nbsp;&nbsp;&nbsp;or
+
+1. Go to the [`Actions`](https://github.com/37bytes/mgutils/actions) tab on this repository.
+2. Choose the [`Maven package`](https://github.com/37bytes/mgutils/actions/workflows/maven-publish.yml) action.
+3. Press `Run workflow`.
+4. Check out `All workflows` to see the deployment process.
+
+### Manually
+
+Follow this guide: https://central.sonatype.org/publish/publish-maven
+
 ## Overview
 
 Let's see the most useful classes in this library.
