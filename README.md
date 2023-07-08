@@ -30,7 +30,7 @@ The library requires Java 8 or above.
 
 ## Publishing New Version
 
-### Using GitHub Actions **(recommended)**
+### Using GitHub Actions _(recommended)_
 
 1. Create a new release on this repository. The new version will be published automatically.
 2. You can check out the [`Actions`](https://github.com/37bytes/mgutils/actions) tab to ensure.
