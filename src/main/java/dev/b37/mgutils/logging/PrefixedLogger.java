@@ -1,12 +1,11 @@
 package dev.b37.mgutils.logging;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * @since 1.0
@@ -33,7 +32,7 @@ public abstract class PrefixedLogger implements Logger {
             return arguments;
         }
 
-        return Stream.concat(Arrays.stream(prefixArgs), Arrays.stream(arguments)).toArray();
+        return ArrayUtils.addAll(prefixArgs, arguments);
     }
 
     private Object[] prefixArguments(Object argument) {
@@ -43,7 +42,7 @@ public abstract class PrefixedLogger implements Logger {
             return new Object[] {argument};
         }
 
-        return Stream.concat(Arrays.stream(prefixArgs), Stream.of(argument)).toArray();
+        return ArrayUtils.addAll(prefixArgs, argument);
     }
 
     private Object[] prefixArguments() {

@@ -3,6 +3,9 @@ package dev.b37.mgutils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * @since 1.4.0
+ */
 public final class ObjectUtils {
     private ObjectUtils() { }
 

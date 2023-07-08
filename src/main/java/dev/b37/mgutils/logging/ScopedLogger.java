@@ -1,13 +1,12 @@
 package dev.b37.mgutils.logging;
 
 import dev.b37.mgutils.random.RandomIdGenerator;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Stream;
 
 /**
  * ScopedLogger is a class used for adding scope to logging operations.
@@ -210,7 +209,7 @@ public class ScopedLogger extends PrefixedLogger {
             return createPrefixArgs(scopeId);
         }
 
-        return Stream.concat(Arrays.stream(outerPrefixArgs), Arrays.stream(createPrefixArgs(scopeId))).toArray();
+        return ArrayUtils.addAll(outerPrefixArgs, createPrefixArgs(scopeId));
     }
 
     private static String createPrefixTemplate(@Nullable CharSequence scopeName, @Nullable Object scopeId) {

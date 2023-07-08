@@ -2,13 +2,12 @@ package dev.b37.mgutils;
 
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @since 1.1
  */
 public final class RandomUtils {
-    private static final Random random = new Random();
-
     private RandomUtils() { }
 
     /**
@@ -29,20 +28,24 @@ public final class RandomUtils {
             return true;
         }
 
-        return chance > Math.random();
+        return chance > random().nextDouble();
     }
 
     /**
      * Returns a random item of the {@code list}
      */
     public static <T> T nextItem(List<T> list) {
-        return list.get(random.nextInt(list.size()));
+        return list.get(random().nextInt(list.size()));
     }
 
     /**
      * Returns a random element of the {@code array}
      */
     public static <T> T nextItem(T[] array) {
-        return array[random.nextInt(array.length)];
+        return array[random().nextInt(array.length)];
+    }
+
+    private static ThreadLocalRandom random() {
+        return ThreadLocalRandom.current();
     }
 }
