@@ -138,6 +138,18 @@ public class TaskInvoker<T> {
     }
 
     /**
+     * Executes all still uncompleted tasks asynchronously using {@link #invokeAllTasks()}, waits for their completion, and returns the results wrapped in a {@link CompletableFuture}.<br>
+     * Calling this method clears the list of accepted tasks.
+     *
+     * @return A {@link CompletableFuture} representing the asynchronous completion of all tasks and containing the results.
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
+     * @since 3.2.0
+     */
+    public CompletableFuture<List<T>> completeAllAsync() throws CancellationException {
+        return CompletableFuture.supplyAsync(this::completeAll);
+    }
+
+    /**
      * Executes all still uncompleted tasks using {@link #invokeAllTasks()}, waits for their completion, and returns the results.<br>
      * Calling this method clears the list of accepted tasks.<br>
      * Uses the provided timeout.
@@ -164,6 +176,19 @@ public class TaskInvoker<T> {
      */
     public void completeAllVoid() throws CancellationException {
         completeFuturesVoid(invokeAllTasks());
+    }
+
+    /**
+     * Executes all still uncompleted tasks asynchronously using {@link #invokeAllTasks()}, and waits for their completion. Once completed, no results are returned.<br>
+     * Calling this method clears the list of accepted tasks, which means that the results can't be obtained afterward.<br>
+     *
+     * @return A {@link CompletableFuture} representing the asynchronous completion of all tasks. This future does not yield a result.
+     * @throws CancellationException May be thrown if the {@link #cancelAll} method was called while the current tasks were being executed.
+     *
+     * @since 3.2.0
+     */
+    public CompletableFuture<Void> completeAllVoidAsync() throws CancellationException {
+        return CompletableFuture.runAsync(() -> completeFuturesVoid(invokeAllTasks()));
     }
 
     /**

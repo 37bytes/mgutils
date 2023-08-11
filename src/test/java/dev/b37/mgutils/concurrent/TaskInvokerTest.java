@@ -158,6 +158,16 @@ public class TaskInvokerTest {
         Assertions.assertTrue(results.size() < 30);
     }
 
+    public void testAsyncTaskInvoker() {
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+
+        TaskInvoker<Void> taskInvoker = new TaskInvoker<>(executor);
+
+        taskInvoker.completeAllVoidAsync().thenRun(() -> {
+
+        });
+    }
+
     @Test
     public void testExecutorService() {
         ExecutorService executor = Executors.newFixedThreadPool(50);
