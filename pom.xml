@@ -77,6 +77,12 @@
             <version>5.9.3</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>32.1.2-jre</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
