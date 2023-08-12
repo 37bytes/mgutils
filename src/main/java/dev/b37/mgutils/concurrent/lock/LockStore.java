@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * When a lock is requested for a specific key, the store either provides an
  * existing lock or creates a new one.
  *
- * @since 3.2.0
  * @see KeyLock
+ * @since 3.2.0
  */
 public class LockStore {
     private final Map<Object, KeyLock> lockMap = new ConcurrentHashMap<>();
@@ -27,7 +27,7 @@ public class LockStore {
     public KeyLock lock(Object key) {
         KeyLock lock = lockMap.compute(key, (k, existingLock) -> {
             if (existingLock == null) {
-                return new KeyLock(key, lockMap);
+                return new StoreKeyLock(key, lockMap);
             }
 
             existingLock.incrementUsages();
@@ -43,5 +43,23 @@ public class LockStore {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("locks", lockMap)
                 .toString();
+    }
+
+    private static class StoreKeyLock extends KeyLock {
+        private final Object key;
+        private final Map<Object, KeyLock> lockMap;
+
+        public StoreKeyLock(Object key, Map<Object, KeyLock> lockMap) {
+            this.key = key;
+            this.lockMap = lockMap;
+        }
+
+        @Override
+        public void close() {
+            unlock();
+            if (decrementUsages() == 0) {
+                lockMap.remove(key, this);
+            }
+        }
     }
 }

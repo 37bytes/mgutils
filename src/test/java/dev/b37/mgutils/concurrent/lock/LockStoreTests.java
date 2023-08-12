@@ -4,6 +4,7 @@ import dev.b37.mgutils.RandomUtils;
 import dev.b37.mgutils.concurrent.TaskInvoker;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -192,14 +193,14 @@ public class LockStoreTests {
         assertTrue(service.awaitTermination(60, TimeUnit.SECONDS));
     }
 
-    @Test
+    @RepeatedTest(5)
     public void testLockStoreMultipleTasks() throws InterruptedException {
-        List<Task> tasks = new ArrayList<>(10_000);
+        List<Task> tasks = new ArrayList<>(100);
         for (int i = 0; i < 1000; i++) {
             Task task = new Task();
             task.id = UUID.randomUUID();
             task.type = RandomUtils.nextItem(TaskType.values());
-            task.entityId = org.apache.commons.lang3.RandomUtils.nextInt(0, 50);
+            task.entityId = org.apache.commons.lang3.RandomUtils.nextInt(0, 2);
             tasks.add(task);
         }
 
@@ -212,7 +213,7 @@ public class LockStoreTests {
         for (Task task : tasks) {
             invoker.submit(() -> {
                 try {
-                    Thread.sleep(org.apache.commons.lang3.RandomUtils.nextLong(1, 100));
+                    Thread.sleep(org.apache.commons.lang3.RandomUtils.nextLong(10, 100));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -226,10 +227,20 @@ public class LockStoreTests {
                         }
                     });
 
-                    Assertions.assertEquals(1, (int) usagesByEntity);
+                    try {
+                        Thread.sleep(org.apache.commons.lang3.RandomUtils.nextLong(1, 5));
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    Assertions.assertEquals(1, (int) usagesByEntity, () -> {
+                        return "there are unexpected usages (" + usagesByEntity + ") of current usagesByEntity " +
+                               entityUsagesMap + " " + lockStore;
+                    });
 
                     Assertions.assertTrue(entityUsagesMap.values().stream().allMatch(usages -> usages <= 1), () -> {
-                        return "there are unexpected usages of entityUsagesMapByTypes " + entityUsagesMap + " " + lockStore;
+                        return "there are unexpected usages of entityUsagesMapByTypes " + entityUsagesMap + " " +
+                               lockStore;
                     });
 
                     entityUsagesMap.compute(task.entityId, (k, v) -> {
@@ -256,7 +267,7 @@ public class LockStoreTests {
         }
     }
 
-    @Test
+    @RepeatedTest(10)
     public void testLockStoreMultipleTasksExtended() throws InterruptedException {
         List<Task> tasks = new ArrayList<>(10_000);
         for (int i = 0; i < 1000; i++) {
@@ -286,13 +297,13 @@ public class LockStoreTests {
                 }
 
                 try (KeyLock lock = lockStore.lock(task.type)) {
-                    Integer usagesByEntity = entityUsagesMapByIds.compute(task.entityId, (k, v) -> {
-                        if (v == null) {
-                            return 1;
-                        } else {
-                            return v + 1;
-                        }
-                    });
+//                    Integer usagesByEntity = entityUsagesMapByIds.compute(task.entityId, (k, v) -> {
+//                        if (v == null) {
+//                            return 1;
+//                        } else {
+//                            return v + 1;
+//                        }
+//                    });
                     Integer usagesByType = entityUsagesMapByTypes.compute(task.type, (k, v) -> {
                         if (v == null) {
                             return 1;
@@ -317,13 +328,6 @@ public class LockStoreTests {
                         hasFailed.set(true);
                     }
 
-                    entityUsagesMapByIds.compute(task.entityId, (k, v) -> {
-                        if (v == null) {
-                            throw new IllegalStateException();
-                        } else {
-                            return v - 1;
-                        }
-                    });
                     entityUsagesMapByTypes.compute(task.type, (k, v) -> {
                         if (v == null) {
                             throw new IllegalStateException();
@@ -331,6 +335,13 @@ public class LockStoreTests {
                             return v - 1;
                         }
                     });
+//                    entityUsagesMapByIds.compute(task.entityId, (k, v) -> {
+//                        if (v == null) {
+//                            throw new IllegalStateException();
+//                        } else {
+//                            return v - 1;
+//                        }
+//                    });
                 }
             });
         }

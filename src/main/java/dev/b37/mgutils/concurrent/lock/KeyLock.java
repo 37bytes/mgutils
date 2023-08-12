@@ -2,7 +2,6 @@ package dev.b37.mgutils.concurrent.lock;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,28 +14,16 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 3.2.0
  * @see LockStore
  */
-public class KeyLock implements AutoCloseable {
+public abstract class KeyLock implements AutoCloseable {
     private final Lock lock = createLock();
     private final AtomicInteger usagesCount = new AtomicInteger(1);
-    private final Object key;
-    private final Map<Object, KeyLock> lockMap;
-
-    KeyLock(Object key, Map<Object, KeyLock> lockMap) {
-        this.key = key;
-        this.lockMap = lockMap;
-    }
 
     /**
      * Releases the lock and decrements the usage count. If the usage count
      * reaches zero, the lock is removed from the associated lock map.
      */
     @Override
-    public void close() {
-        lock.unlock();
-        if (usagesCount.decrementAndGet() == 0) {
-            lockMap.remove(key, this);
-        }
-    }
+    public abstract void close();
 
     @Override
     public String toString() {
@@ -46,12 +33,20 @@ public class KeyLock implements AutoCloseable {
                 .toString();
     }
 
-    void lock() {
+    final void lock() {
         lock.lock();
     }
 
-    void incrementUsages() {
+    protected final void unlock() {
+        lock.unlock();
+    }
+
+    final void incrementUsages() {
         usagesCount.incrementAndGet();
+    }
+
+    protected final int decrementUsages() {
+        return usagesCount.decrementAndGet();
     }
 
     /**
