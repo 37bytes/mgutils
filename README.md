@@ -210,7 +210,7 @@ Also, tasks in `TaskInvoker` can be cancelled using the `cancelAll` method. Here
 ExecutorService executor = Executors.newFixedThreadPool(5);
 TaskInvoker<Void> invoker = new TaskInvoker<>(executor);
 
-List<String> results = Collections.synchronizedList(new ArrayList<>());
+Queue<String> results = new ConcurrentLinkedQueue<>();
 AtomicInteger counter = new AtomicInteger(0); // just to know when to cancel the tasks
 
 final int MAX_COUNT = 100;
@@ -230,7 +230,7 @@ try {
     // an exception will be thrown
 }
 
-// the results list contains less than 100 items
+// the results collection contains less than 100 items
 ```
 
 As soon as `completeAll()` is called, the remaining tasks are immediately marked as cancelled and an attempt to execute them by `TaskInvoker` will lead to `CancellationException`.

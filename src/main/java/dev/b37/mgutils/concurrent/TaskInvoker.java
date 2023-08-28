@@ -1,16 +1,16 @@
 package dev.b37.mgutils.concurrent;
 
+import dev.b37.mgutils.delegate.CollectionConsumer;
+import dev.b37.mgutils.delegate.ExceptionalConsumer;
 import dev.b37.mgutils.delegate.ExceptionalRunnable;
 import dev.b37.mgutils.delegate.MultiConsumer;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import dev.b37.mgutils.delegate.CollectionConsumer;
-import dev.b37.mgutils.delegate.ExceptionalConsumer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 public class TaskInvoker<T> {
-    private final List<InvokerCallable<T>> tasks = Collections.synchronizedList(new ArrayList<>());
+    private final Queue<InvokerCallable<T>> tasks = new ConcurrentLinkedQueue<>();
     private final ExecutorService executor;
 
     public TaskInvoker(ExecutorService executor) {
@@ -59,7 +59,7 @@ public class TaskInvoker<T> {
     /**
      * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
      * The values that are passed to the {@code consumer} will be added to the output list.<br>
-     * These values are firstly collected to the newly created <i>synchronized</i> {@link ArrayList}.<br>
+     * These values are firstly collected to the newly created {@link ConcurrentLinkedQueue}.<br>
      * <br>
      * It's recommended to use this method only if you need to add multiple values by one task,
      * otherwise consider using {@link #submit(Callable)} instead.
@@ -67,23 +67,23 @@ public class TaskInvoker<T> {
      * @since 2.0.0
      */
     public void submit(ExceptionalConsumer<MultiConsumer<T>> task) {
-        submit(task, () -> Collections.synchronizedList(new ArrayList<>()));
+        submit(task, ConcurrentLinkedQueue::new);
     }
 
     /**
      * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
      * The values that are passed to the {@code consumer} will be added to the output list.<br>
-     * These values are firstly collected to the {@link List} newly created from the provided {@code listFactory}.
+     * These values are firstly collected to the {@link List} newly created from the provided {@code resultCollectionFactory}.
      *
-     * @param listFactory The factory used to create a {@link List} to which the accepted values will be collected.<br>
+     * @param resultCollectionFactory The factory used to create a {@link Collection} to which the accepted values will be collected.<br>
      *                    <br>
      *                    It's recommended to use this method only if you need to add multiple values by one task,
      *                    otherwise consider using {@link #submit(Callable)} instead.
      * @since 2.0.0
      */
-    public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Supplier<List<T>> listFactory) {
+    public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Supplier<Collection<T>> resultCollectionFactory) {
         tasks.add(new InvokerCallable<>(() -> {
-            List<T> appliedValues = listFactory.get();
+            Collection<T> appliedValues = resultCollectionFactory.get();
             MultiConsumer<T> valueConsumer = new CollectionConsumer<>(appliedValues);
             task.accept(valueConsumer);
             return new TaskValue.Multi<>(appliedValues);
@@ -368,13 +368,13 @@ public class TaskInvoker<T> {
         }
 
         class Multi<T> implements TaskValue<T> {
-            private final List<T> values;
+            private final Collection<T> values;
 
-            private Multi(List<T> values) {
+            private Multi(Collection<T> values) {
                 this.values = values;
             }
 
-            public List<T> getValues() {
+            public Collection<T> getValues() {
                 return values;
             }
 

@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -128,7 +128,7 @@ public class TaskInvokerTest {
         ExecutorService executor = Executors.newFixedThreadPool(5);
         TaskInvoker<Void> invoker = new TaskInvoker<>(executor);
 
-        List<String> results = Collections.synchronizedList(new ArrayList<>());
+        Queue<String> results = new ConcurrentLinkedQueue<>();
         AtomicInteger counter = new AtomicInteger(0);
 
         final int MAX_COUNT = 100;
