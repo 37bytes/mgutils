@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TaskInvokerTest {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -114,6 +115,25 @@ public class TaskInvokerTest {
             invoker.submit((consumer) -> {
                 for (int j = 0; j < 1_000_000; j++) {
                     consumer.accept(number * j);
+                }
+            });
+        }
+
+        List<Integer> results = invoker.completeAll();
+
+        Assertions.assertEquals(8 * 1_000_000, results.size());
+    }
+
+    @Test
+    public void testTaskInvokerConsumerNew() {
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        TaskInvoker<Integer> invoker = new TaskInvoker<>(executor);
+
+        for (int i = 0; i < 4; i++) {
+            int number = i;
+            invoker.submit((consumer) -> {
+                for (int j = 0; j < 1_000_000; j++) {
+                    consumer.acceptAll(Stream.of(number * j, number * j + 1).iterator());
                 }
             });
         }

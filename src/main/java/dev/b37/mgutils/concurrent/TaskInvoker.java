@@ -73,7 +73,7 @@ public class TaskInvoker<T> {
     /**
      * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
      * The values that are passed to the {@code consumer} will be added to the output list.<br>
-     * These values are firstly collected to the {@link List} newly created from the provided {@code resultCollectionFactory}.
+     * These values are firstly collected to the {@link Collection} newly created from the provided {@code resultCollectionFactory}.
      *
      * @param resultCollectionFactory The factory used to create a {@link Collection} to which the accepted values will be collected.<br>
      *                    <br>
@@ -83,10 +83,26 @@ public class TaskInvoker<T> {
      */
     public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Supplier<Collection<T>> resultCollectionFactory) {
         tasks.add(new InvokerCallable<>(() -> {
-            Collection<T> appliedValues = resultCollectionFactory.get();
-            MultiConsumer<T> valueConsumer = new CollectionConsumer<>(appliedValues);
+            Collection<T> resultCollection = resultCollectionFactory.get();
+            MultiConsumer<T> valueConsumer = new CollectionConsumer<>(resultCollection);
             task.accept(valueConsumer);
-            return new TaskValue.Multi<>(appliedValues);
+            return new TaskValue.Multi<>(resultCollection);
+        }));
+    }
+
+    /**
+     * Accepts a task by adding it to the list for execution. The task <em>does not</em> start executing.<br>
+     * The values that are passed to the {@code consumer} will be added to the output list.<br>
+     * These values are firstly collected to the {@link Collection} provided in {@code resultCollection}.
+     *
+     * @param resultCollection The collection to which the accepted values will be collected.<br>
+     * @since 3.3.0
+     */
+    public void submit(ExceptionalConsumer<MultiConsumer<T>> task, Collection<T> resultCollection) {
+        tasks.add(new InvokerCallable<>(() -> {
+            MultiConsumer<T> valueConsumer = new CollectionConsumer<>(resultCollection);
+            task.accept(valueConsumer);
+            return new TaskValue.Multi<>(resultCollection);
         }));
     }
 
