@@ -33,6 +33,46 @@ public class CollectionUtilsTest {
         for (UUID personId : peopleMap.keySet()) {
             Assertions.assertEquals(personId, peopleMap.get(personId).getId());
         }
+
+        Person lastPerson = people.get(people.size() - 1);
+
+        List<Person> people2 = new ArrayList<>(people);
+
+        people2.add(new Person(lastPerson.getId(), "Ten 10 Duplicate"));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            CollectionUtils.mapByKey(people2, Person::getId);
+        });
+
+        Assertions.assertEquals(people2.size(), CollectionUtils.mapByKey(people2, Person::getName).size());
+    }
+
+    @Test
+    public void testMapByKeyArray() {
+        Person[] people = new Person[] {
+                new Person(UUID.randomUUID(), "One 1"),
+                new Person(UUID.randomUUID(), "Two 2"),
+                new Person(UUID.randomUUID(), "Three 3"),
+                new Person(UUID.randomUUID(), "Four 4"),
+                new Person(UUID.randomUUID(), "Five 5"),
+                new Person(UUID.randomUUID(), "Six 6"),
+                new Person(UUID.randomUUID(), "Seven 7"),
+                new Person(UUID.randomUUID(), "Eight 8"),
+                new Person(UUID.randomUUID(), "N9ne"),
+                new Person(UUID.randomUUID(), "Ten 10")
+        };
+
+        Map<UUID, Person> peopleMap = CollectionUtils.mapByKey(people, Person::getId);
+
+        Assertions.assertEquals(people.length, peopleMap.size());
+
+        for (Person person : people) {
+            Assertions.assertEquals(person, peopleMap.get(person.getId()));
+        }
+
+        for (UUID personId : peopleMap.keySet()) {
+            Assertions.assertEquals(personId, peopleMap.get(personId).getId());
+        }
     }
 
     @Test
