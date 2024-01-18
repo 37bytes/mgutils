@@ -2,7 +2,7 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.b37.libs/mgutils/badge.svg)](https://central.sonatype.com/artifact/dev.b37.libs/mgutils)
 
-> **Note**  
+> [!Note]  
 > The version displayed here may be outdated, click on the badge to view the latest version  
 > Try the highest version seen
 
