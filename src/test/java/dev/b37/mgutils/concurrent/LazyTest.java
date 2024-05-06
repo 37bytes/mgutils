@@ -19,6 +19,40 @@ public class LazyTest {
     }
 
     @Test
+    public void testLazyNull() {
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            new Lazy<>(null);
+        });
+
+        Lazy<?> lazy = new Lazy<>(() -> null);
+
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            lazy.get();
+        });
+
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            lazy.get();
+        });
+    }
+
+    @Test
+    public void testLazyNullable() {
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            new NullableLazy<>(null);
+        });
+
+        NullableLazy<?> lazy = new NullableLazy<>(() -> null);
+
+        Assertions.assertDoesNotThrow(() -> {
+            Assertions.assertNull(lazy.get());
+        });
+
+        Assertions.assertDoesNotThrow(() -> {
+            Assertions.assertNull(lazy.get());
+        });
+    }
+
+    @Test
     public void testLazyConcurrency() {
         Logger logger = logs.createLogger("testLazyConcurrency:", null);
 

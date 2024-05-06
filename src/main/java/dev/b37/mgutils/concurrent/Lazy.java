@@ -23,22 +23,30 @@ import java.util.function.Supplier;
  * @see NullableLazy
  * @since 1.5.0
  */
-public class Lazy<T> {
+public class Lazy<T> implements Supplier<T> {
+    private volatile boolean hasValue;
     private volatile T value;
     private Supplier<T> valueFactory;
 
     public Lazy(@NotNull Supplier<T> valueFactory) {
-        Objects.requireNonNull(valueFactory, "valueFactory is null");
-        this.valueFactory = valueFactory;
+        this.valueFactory = Objects.requireNonNull(valueFactory, "valueFactory is null");
     }
 
+    /**
+     * When called for the first tame, calls the {@code valueFactory} and stores the returned value, returning it.<br>
+     * As soon as the value is stored, it's just returned as is without calling the {@code valueFactory}.
+     * @return The value returned by the {@code valueFactory}
+     * @throws NullPointerException Thrown if {@code valueFactory} returns {@code null}
+     */
     @NotNull
+    @Override
     public T get() {
-        if (this.value == null) {
+        if (!this.hasValue) {
             synchronized (this) {
-                if (this.value == null) {
-                    this.value = this.valueFactory.get();
-                    Objects.requireNonNull(this.value, "the value returned by valueFactory equals to null but must not");
+                if (!this.hasValue) {
+                    this.value = Objects.requireNonNull(this.valueFactory.get(),
+                            "the value returned by valueFactory equals to null but must not");
+                    this.hasValue = true;
                     this.valueFactory = null;
                 }
             }
