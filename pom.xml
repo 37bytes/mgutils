@@ -6,7 +6,7 @@
 
     <groupId>dev.b37.libs</groupId>
     <artifactId>mgutils</artifactId>
-    <version>3.5.0</version>
+    <version>3.6.0</version>
 
     <name>MG Utils</name>
     <description>Common Java Utils</description>
